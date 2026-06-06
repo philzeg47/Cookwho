@@ -1,0 +1,14 @@
+# Team / enterprise overrides for _bmad/config.toml.
+# Committed to the repo — applies to every developer on the project.
+# Tables deep-merge over base config; keyed entries merge by key.
+# Example: override an agent descriptor, or add a new agent.
+#
+# [agents.bmad-agent-pm]
+# description = "Prefers short, bulleted PRDs over narrative drafts."
+
+# Corrige le bug de la v6.8.0 : la variable {output_folder} n'etait pas resolue
+# et un dossier nomme litteralement "{output_folder}" etait cree.
+# On fixe le dossier de sortie sur la valeur par defaut documentee : _bmad-output
+[modules.bmm]
+planning_artifacts = "{project-root}/_bmad-output/planning-artifacts"
+implementation_artifacts = "{project-root}/_bmad-output/implementation-artifacts"
