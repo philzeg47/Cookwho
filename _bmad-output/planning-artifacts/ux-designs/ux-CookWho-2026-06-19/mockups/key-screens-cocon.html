@@ -1,0 +1,60 @@
+<!-- Maquette clés CookWho — direction Cocon (abricot & sauge). Référence visuelle ; DESIGN.md/EXPERIENCE.md font foi en cas de conflit. -->
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap');
+body{font-family:'Nunito',system-ui,sans-serif; background:#FBF4EC; margin:0; padding:24px; color:#2C2C2A;}
+*{box-sizing:border-box;}
+.grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:16px; max-width:760px; margin:0 auto;}
+.frame{background:#F2E9DD; border-radius:16px; padding:14px;}
+.screen{background:#FBF4EC; border-radius:14px; padding:18px;}
+.chip{font-size:13px; padding:5px 11px; border-radius:999px; display:inline-block;}
+.btn-primary{background:#EF9F27; color:#633806; font-weight:600;}
+.btn-secondary{border:1px solid #E0D4C2; color:#2C2C2A;}
+.card{background:#fff; border:1px solid #E0D4C2; border-radius:12px; padding:13px;}
+</style>
+<div class="grid">
+
+  <div class="frame">
+    <p style="margin:0 0 8px; font-size:13px; color:#5F5E5A;">Côté participante — Léa</p>
+    <div class="screen">
+      <p style="margin:0 0 14px; font-size:13px; color:#5F5E5A;">Déjeuner d'équipe · jeu. 12h30</p>
+      <div style="width:54px; height:54px; border-radius:999px; background:#5DCAA5; display:flex; align-items:center; justify-content:center; margin-bottom:12px; font-size:30px; color:#04342C;">✓</div>
+      <p style="margin:0 0 6px; font-size:20px; font-weight:700;">C'est pris en compte</p>
+      <p style="margin:0 0 16px; font-size:15px; color:#5F5E5A; line-height:1.6;">Sami ne choisira que des plats qui te conviennent.</p>
+      <p style="margin:0 0 8px; font-size:13px; font-weight:600; color:#5F5E5A;">Ce qu'on a retenu</p>
+      <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:18px;">
+        <span class="chip" style="background:#E1F5EE; color:#04342C;">Végétarien</span>
+        <span class="chip" style="background:#FCEBEB; color:#791F1F;">⚠ Arachides</span>
+        <span class="chip" style="background:#FAEEDA; color:#854F0B;">Champignons</span>
+      </div>
+      <div class="btn-secondary" style="text-align:center; font-size:14px; font-weight:600; padding:9px; border-radius:10px;">Modifier mes réponses</div>
+    </div>
+  </div>
+
+  <div class="frame">
+    <p style="margin:0 0 8px; font-size:13px; color:#5F5E5A;">Côté organisateur — Sami</p>
+    <div class="screen">
+      <p style="margin:0 0 10px; font-size:20px; font-weight:700;">Recettes proposées</p>
+      <span class="chip" style="background:#5DCAA5; color:#04342C; margin-bottom:14px;">✓ 6 plats compatibles avec tout le groupe</span>
+
+      <div class="card" style="margin:10px 0;">
+        <p style="margin:0 0 8px; font-size:16px; font-weight:700;">Curry de pois chiches</p>
+        <div style="display:flex; gap:8px;">
+          <span class="btn-secondary" style="flex:1; text-align:center; font-size:13px; padding:7px; border-radius:10px;">Ingrédients</span>
+          <span class="btn-primary" style="flex:1; text-align:center; font-size:13px; padding:7px; border-radius:10px;">Choisir</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <p style="margin:0 0 6px; font-size:16px; font-weight:700;">Risotto aux légumes</p>
+        <p style="margin:0 0 9px; font-size:13px; color:#854F0B;">ⓘ Contient des champignons — gêne Léa</p>
+        <div style="display:flex; gap:8px;">
+          <span class="btn-secondary" style="flex:1; text-align:center; font-size:13px; padding:7px; border-radius:10px;">Ingrédients</span>
+          <span class="btn-primary" style="flex:1; text-align:center; font-size:13px; padding:7px; border-radius:10px;">Choisir</span>
+        </div>
+      </div>
+
+      <div style="margin-top:12px; background:#FCEBEB; border:1px solid #E24B4A; border-radius:10px; padding:10px; font-size:13px; color:#791F1F;">⚠ Léa a une allergie — vérifie les ingrédients avant de valider.</div>
+    </div>
+  </div>
+
+</div>
