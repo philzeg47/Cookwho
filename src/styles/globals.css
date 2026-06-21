@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+/* CookWho — identité visuelle « Cocon » (source : DESIGN.md). V1 mode clair uniquement. */
+@theme {
+  --font-sans:
+    var(--font-nunito), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
+    "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+
+  /* Couleurs Cocon */
+  --color-background: #fbf4ec;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f2e9dd;
+  --color-primary: #ef9f27;
+  --color-primary-strong: #854f0b;
+  --color-primary-soft: #faeeda;
+  --color-accent: #ba7517;
+  --color-accent-soft: #faeeda;
+  --color-safe: #5dcaa5;
+  --color-safe-text: #04342c;
+  --color-safe-soft: #e1f5ee;
+  --color-danger: #e24b4a;
+  --color-danger-strong: #791f1f;
+  --color-danger-soft: #fcebeb;
+  --color-ink: #2c2c2a;
+  --color-ink-soft: #5f5e5a;
+  --color-on-primary: #633806;
+  --color-edge: #e0d4c2;
+
+  /* Rayons arrondis (DESIGN.md) */
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
+}
