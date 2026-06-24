@@ -51,6 +51,21 @@ model User {
     image         String?
     accounts      Account[]
     sessions      Session[]
+    repas         Repas[]
+}
+
+// Domaine métier CookWho — l'organisateur est l'utilisateur Auth.js (User).
+model Repas {
+    id             String   @id @default(cuid())
+    organisateur   User     @relation(fields: [organisateurId], references: [id], onDelete: Cascade)
+    organisateurId String
+    lieu           String
+    date           DateTime
+    heure          String // format "HH:mm"
+    createdAt      DateTime @default(now())
+    expiresAt      DateTime // garde-fou RGPD (purge planifiée — story 2.5)
+
+    @@index([organisateurId])
 }
 
 model VerificationToken {
