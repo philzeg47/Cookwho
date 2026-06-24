@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-06-19
-last_updated: 2026-06-19  # story 1.1 → ready-for-dev
+last_updated: 2026-06-22  # stories 1.3/1.4/1.5 → done (revue de code)
 project: CookWho
 project_key: NOKEY
 tracking_system: file-system
@@ -43,13 +43,13 @@ story_location: _bmad-output/implementation-artifacts
 
 development_status:
   # Epic 1 : Socle & accès organisateur
-  epic-1: in-progress
-  1-1-initialisation-du-projet-theme-cocon: review
-  1-2-bibliotheque-de-composants-ui-de-base: ready-for-dev
-  1-3-connexion-organisateur-par-lien-magique: backlog
-  1-4-espace-mes-repas: backlog
-  1-5-socle-d-accessibilite: backlog
-  epic-1-retrospective: optional
+  epic-1: done
+  1-1-initialisation-du-projet-theme-cocon: done
+  1-2-bibliotheque-de-composants-ui-de-base: done
+  1-3-connexion-organisateur-par-lien-magique: done
+  1-4-espace-mes-repas: done
+  1-5-socle-d-accessibilite: done
+  epic-1-retrospective: done
 
   # Epic 2 : Créer un repas & inviter
   epic-2: backlog

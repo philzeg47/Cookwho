@@ -14,6 +14,7 @@
   --color-primary-strong: #854f0b;
   --color-primary-soft: #faeeda;
   --color-accent: #ba7517;
+  --color-accent-strong: #8a5410; /* texte sur accent-soft : ≥ 4.5:1 (WCAG AA) */
   --color-accent-soft: #faeeda;
   --color-safe: #5dcaa5;
   --color-safe-text: #04342c;
