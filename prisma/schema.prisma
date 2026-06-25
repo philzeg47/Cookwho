@@ -65,7 +65,28 @@ model Repas {
     createdAt      DateTime @default(now())
     expiresAt      DateTime // garde-fou RGPD (purge planifiée — story 2.5)
 
+    participants Participant[]
+
     @@index([organisateurId])
+}
+
+enum StatutParticipant {
+    EN_ATTENTE
+    REPONDU
+}
+
+model Participant {
+    id          String            @id @default(cuid())
+    repas       Repas             @relation(fields: [repasId], references: [id], onDelete: Cascade)
+    repasId     String
+    prenom      String
+    email       String?
+    accessToken String            @unique // token 256 bits (crypto) — URL /p/{token}
+    statut      StatutParticipant @default(EN_ATTENTE)
+    createdAt   DateTime          @default(now())
+    updatedAt   DateTime          @updatedAt
+
+    @@index([repasId])
 }
 
 model VerificationToken {
