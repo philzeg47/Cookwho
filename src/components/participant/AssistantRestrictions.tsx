@@ -8,12 +8,22 @@ import { SafeBadge } from "~/components/ui/SafeBadge";
 import { EtapeAllergenes } from "~/components/participant/EtapeAllergenes";
 import { EtapeNonAimes } from "~/components/participant/EtapeNonAimes";
 import { EtapeRegime } from "~/components/participant/EtapeRegime";
+import { LienInvalide } from "~/components/participant/LienInvalide";
+import { RecapRestrictions } from "~/components/participant/RecapRestrictions";
 import { SEUIL_TOLERANCE_DEFAUT } from "~/lib/restrictions";
 import { api } from "~/trpc/react";
 
+type RestrictionInitiale = {
+  type: "REGIME" | "ALLERGIE" | "NON_AIME";
+  valeur: string;
+  seuilTolerance: number | null;
+};
+
 type Acces = {
   prenom: string;
+  statut: "EN_ATTENTE" | "REPONDU";
   repas: { lieu: string; date: Date; heure: string };
+  restrictions: RestrictionInitiale[];
 };
 
 /**
@@ -90,6 +100,28 @@ function versRestrictions(donnees: DonneesRestrictions) {
   return restrictions;
 }
 
+/**
+ * Reconstruit l'état de l'assistant depuis les restrictions persistées
+ * (inverse de `versRestrictions`, pour la réouverture — story 3.4).
+ * Le seuil global est repris de la 1ʳᵉ ligne NON_AIME (toutes identiques à
+ * l'écriture) ; à défaut, le seuil par défaut.
+ */
+export function versDonnees(
+  restrictions: RestrictionInitiale[],
+): DonneesRestrictions {
+  const premierNonAime = restrictions.find((r) => r.type === "NON_AIME");
+  return {
+    regimes: restrictions.filter((r) => r.type === "REGIME").map((r) => r.valeur),
+    allergenes: restrictions
+      .filter((r) => r.type === "ALLERGIE")
+      .map((r) => r.valeur),
+    nonAimes: restrictions
+      .filter((r) => r.type === "NON_AIME")
+      .map((r) => r.valeur),
+    seuilNonAimes: premierNonAime?.seuilTolerance ?? SEUIL_TOLERANCE_DEFAUT,
+  };
+}
+
 /** (Dé)sélectionne une valeur dans un tableau (toggle, sans doublon). */
 function basculer(liste: string[], valeur: string) {
   return liste.includes(valeur)
@@ -104,13 +136,28 @@ export function AssistantRestrictions({
   token: string;
   acces: Acces;
 }) {
-  const [vue, setVue] = useState<"accueil" | "stepper" | "confirme">("accueil");
+  const dejaRepondu = acces.statut === "REPONDU";
+  const [vue, setVue] = useState<
+    "accueil" | "retour" | "stepper" | "confirme" | "lienInvalide"
+  >(dejaRepondu ? "retour" : "accueil");
   const [etape, setEtape] = useState(0);
-  const [donnees, setDonnees] = useState<DonneesRestrictions>(DONNEES_INITIALES);
+  // Pré-remplissage paresseux depuis les restrictions persistées (réouverture).
+  const [donnees, setDonnees] = useState<DonneesRestrictions>(() =>
+    dejaRepondu && acces.restrictions.length > 0
+      ? versDonnees(acces.restrictions)
+      : DONNEES_INITIALES,
+  );
   const titreRef = useRef<HTMLHeadingElement>(null);
 
   const enregistrer = api.participant.enregistrerRestrictions.useMutation({
     onSuccess: () => setVue("confirme"),
+    onError: (error) => {
+      // Erreur TERMINALE (lien devenu invalide : repas expiré/purgé en cours de
+      // session) → on bascule sur l'état « lien invalide », sans retry possible.
+      // Une erreur transitoire (réseau, pas de `data.code`) reste sur le stepper
+      // et déclenche le Banner « réessaie » via `isError`.
+      if (error.data?.code === "NOT_FOUND") setVue("lienInvalide");
+    },
   });
 
   function focusTitre() {
@@ -176,6 +223,20 @@ export function AssistantRestrictions({
     setDonnees((d) => ({ ...d, seuilNonAimes: valeur }));
   }
 
+  // Ouvre l'assistant pour modifier (depuis la confirmation OU l'écran de
+  // retour d'un lien déjà répondu). Les saisies en cours / pré-remplies sont
+  // conservées dans `donnees`.
+  function modifier() {
+    setEtape(0);
+    setVue("stepper");
+    focusTitre();
+  }
+
+  if (vue === "lienInvalide") {
+    // Repas expiré/purgé pendant la session : message générique, sans retry.
+    return <LienInvalide />;
+  }
+
   if (vue === "accueil") {
     return (
       <div className="flex flex-col gap-6">
@@ -209,19 +270,47 @@ export function AssistantRestrictions({
     );
   }
 
+  if (vue === "retour") {
+    return (
+      <div className="flex flex-col gap-6">
+        <SafeBadge>On a déjà tes préférences</SafeBadge>
+        <div className="flex flex-col gap-2">
+          <h1 className="text-3xl font-bold tracking-tight">
+            Re-bonjour {acces.prenom} 👋
+          </h1>
+          <p className="text-ink-soft">
+            Tu nous as déjà indiqué tes préférences. Tu veux les modifier ?
+          </p>
+        </div>
+
+        <RecapRestrictions donnees={donnees} />
+
+        <Button type="button" onClick={modifier}>
+          Modifier mes réponses
+        </Button>
+      </div>
+    );
+  }
+
   if (vue === "confirme") {
     return (
       <div className="flex flex-col gap-6">
-        <SafeBadge>C&apos;est bien noté</SafeBadge>
+        <SafeBadge>C&apos;est pris en compte</SafeBadge>
         <div className="flex flex-col gap-2">
           <h1 className="text-3xl font-bold tracking-tight">
             Merci {acces.prenom} !
           </h1>
           <p className="text-ink-soft">
-            Tes préférences ont bien été enregistrées. L&apos;organisateur en
-            tiendra compte pour choisir le plat.
+            Tes préférences ont bien été enregistrées. L&apos;organisateur ne
+            choisira que des plats qui te conviennent.
           </p>
         </div>
+
+        <RecapRestrictions donnees={donnees} />
+
+        <Button variant="secondary" type="button" onClick={modifier}>
+          Modifier mes réponses
+        </Button>
       </div>
     );
   }

@@ -1,10 +1,10 @@
 ---
-baseline_commit: ''
+baseline_commit: 7007a309569de4bcd9786a5c21917afabaa8c86b
 ---
 
 # Story 3.3 : Récapitulatif & confirmation de prise en compte
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -25,25 +25,25 @@ so that j'ai confiance que ma contrainte sera respectée. (FR7)
 
 ## Tasks / Subtasks
 
-- [ ] **Tâche 1 — Composant `RecapRestrictions`** (AC: 2, 3, 4, 5)
-  - [ ] Créer `src/components/participant/RecapRestrictions.tsx` (`'use client'` non requis — composant de présentation pur, pas d'état/événement).
-  - [ ] Props : `{ donnees: DonneesRestrictions }` (réutilise le type exporté par `AssistantRestrictions`).
-  - [ ] Rendu groupé : section « Régimes » → `Chip variant="regime"` ; « Allergies » → `Chip variant="allergie" icon="⚠"` ; « Aliments non-aimés » → `Chip variant="non-aime"`. N'afficher une section que si elle a au moins un élément.
-  - [ ] Si ≥1 non-aimé : rappeler le **libellé** du seuil via `TOLERANCE_LABELS[donnees.seuilNonAimes]` (jamais le chiffre).
-  - [ ] Cas **tout vide** (aucun régime/allergène/non-aimé) : afficher un message rassurant unique (« Tu manges de tout, c'est noté ! »), pas de sections vides.
-  - [ ] En-tête « Ce qu'on a retenu » (cf. maquette `key-screens-cocon.html`).
+- [x] **Tâche 1 — Composant `RecapRestrictions`** (AC: 2, 3, 4, 5)
+  - [x] Créer `src/components/participant/RecapRestrictions.tsx` (`'use client'` non requis — composant de présentation pur, pas d'état/événement).
+  - [x] Props : `{ donnees: DonneesRestrictions }` (réutilise le type exporté par `AssistantRestrictions`).
+  - [x] Rendu groupé : section « Régimes » → `Chip variant="regime"` ; « Allergies » → `Chip variant="allergie" icon="⚠"` ; « Aliments non-aimés » → `Chip variant="non-aime"`. N'afficher une section que si elle a au moins un élément.
+  - [x] Si ≥1 non-aimé : rappeler le **libellé** du seuil via `TOLERANCE_LABELS[donnees.seuilNonAimes]` (jamais le chiffre).
+  - [x] Cas **tout vide** (aucun régime/allergène/non-aimé) : afficher un message rassurant unique (« Tu manges de tout, c'est noté ! »), pas de sections vides.
+  - [x] En-tête « Ce qu'on a retenu » (cf. maquette `key-screens-cocon.html`).
 
-- [ ] **Tâche 2 — Enrichir la vue `confirme` de `AssistantRestrictions`** (AC: 1, 5, 6)
-  - [ ] Dans `AssistantRestrictions.tsx`, vue `confirme` : conserver le SafeBadge « C'est bien noté » + le titre « Merci {prenom} ! », **ajouter** `<RecapRestrictions donnees={donnees} />`.
-  - [ ] Ajouter un bouton **« Modifier mes réponses »** (`variant="secondary"`) qui repasse `vue="stepper"`, `etape=0` (l'état `donnees` est déjà conservé). Déplacer le focus sur le titre d'étape (réutiliser `focusTitre`).
-  - [ ] Ne **pas** modifier le router ni le schéma : le récap s'appuie sur l'état local `donnees` (déjà soumis avec succès). Frontière étanche conservée (NFR5).
+- [x] **Tâche 2 — Enrichir la vue `confirme` de `AssistantRestrictions`** (AC: 1, 5, 6)
+  - [x] Dans `AssistantRestrictions.tsx`, vue `confirme` : conserver le SafeBadge « C'est bien noté » + le titre « Merci {prenom} ! », **ajouter** `<RecapRestrictions donnees={donnees} />`.
+  - [x] Ajouter un bouton **« Modifier mes réponses »** (`variant="secondary"`) qui repasse `vue="stepper"`, `etape=0` (l'état `donnees` est déjà conservé). Déplacer le focus sur le titre d'étape (réutiliser `focusTitre`).
+  - [x] Ne **pas** modifier le router ni le schéma : le récap s'appuie sur l'état local `donnees` (déjà soumis avec succès). Frontière étanche conservée (NFR5).
 
-- [ ] **Tâche 3 — Tests** (AC: 2, 3, 4, 8)
-  - [ ] `RecapRestrictions.test.tsx` : récap non vide (régime + allergène ⚠ + non-aimé + libellé de seuil), distinction allergie/non-aimé (⚠ présent sur l'allergène, absent du non-aimé), **cas vide** → message « Tu manges de tout ».
-  - [ ] Étendre `AssistantRestrictions.test.tsx` : après un parcours avec sélections + `onSuccess`, l'écran de confirmation affiche le SafeBadge **et** le récap (un chip attendu) ; cliquer « Modifier mes réponses » → retour à « Étape 1 sur 3 » avec la sélection conservée (le régime reste `aria-pressed`).
+- [x] **Tâche 3 — Tests** (AC: 2, 3, 4, 8)
+  - [x] `RecapRestrictions.test.tsx` : récap non vide (régime + allergène ⚠ + non-aimé + libellé de seuil), distinction allergie/non-aimé (⚠ présent sur l'allergène, absent du non-aimé), **cas vide** → message « Tu manges de tout ».
+  - [x] Étendre `AssistantRestrictions.test.tsx` : après un parcours avec sélections + `onSuccess`, l'écran de confirmation affiche le SafeBadge **et** le récap (un chip attendu) ; cliquer « Modifier mes réponses » → retour à « Étape 1 sur 3 » avec la sélection conservée (le régime reste `aria-pressed`).
 
-- [ ] **Tâche 4 — Validations** (AC: 8)
-  - [ ] `npm run test`, `lint`, `typecheck`, `SKIP_ENV_VALIDATION=1 npm run build` → tout vert.
+- [x] **Tâche 4 — Validations** (AC: 8)
+  - [x] `npm run test`, `lint`, `typecheck`, `SKIP_ENV_VALIDATION=1 npm run build` → tout vert.
 
 ## Dev Notes
 
@@ -112,20 +112,28 @@ so that j'ai confiance que ma contrainte sera respectée. (FR7)
 
 ### Agent Model Used
 
-<!-- à remplir par le dev agent -->
+claude-opus-4-8 (bmad-dev-story)
 
 ### Debug Log References
 
-<!-- à remplir -->
+- Suite complète : **109/109** ✅ (103 → 109, +6 : RecapRestrictions ×5, parcours récap/modifier ×1). `lint` ✅ · `typecheck` ✅ · `SKIP_ENV_VALIDATION=1 build` ✅ (`/p/[token]` = 5 kB).
+- Aucun échec en cours de route.
 
 ### Completion Notes List
 
-<!-- à remplir -->
+- ✅ **`RecapRestrictions`** (présentation pure, pas d'état) : sections « Régimes »/« Allergies »/« Aliments non-aimés » rendues seulement si non vides ; `Chip` aux bons variants (allergène avec ⚠, non-aimé sans) ; rappel du seuil via `TOLERANCE_LABELS[seuil]` (libellé, jamais le chiffre) ; **cas vide** → « Tu manges de tout, c'est noté ! ».
+- ✅ **Vue `confirme` enrichie** : SafeBadge « C'est pris en compte » + « Merci {prenom} ! » + `<RecapRestrictions>` + bouton **« Modifier mes réponses »** (`variant="secondary"`) → retour `stepper`/étape 0, état `donnees` conservé, focus replacé sur le titre d'étape.
+- ✅ **Confirmation après enregistrement effectif** (AC1) : le récap n'apparaît que dans la vue `confirme`, atteinte via `onSuccess` de la mutation. Le récap vient de l'**état local** déjà soumis — **aucune** lecture serveur, **aucune** modif du router/schéma (NFR5 intact).
+- ✅ **Multi-régime** affiché (N chips). Wording **générique** côté participant (« L'organisateur… ») — le prénom de l'organisateur n'est pas exposé par `monAcces`.
+- **Hors périmètre (confirmé)** : réouverture du lien déjà `REPONDU` (relecture DB + accueil « On a déjà tes préférences ✓ ») → story 3.4 ; états expiré/clos → story 3.5.
+- **À faire par l'utilisateur (DoD)** : ouvrir `/p/{token}`, saisir régime+allergie+non-aimé, Valider → vérifier le récap + le libellé de seuil + « Modifier » ; cas vide → message rassurant.
 
 ### File List
 
-<!-- à remplir par le dev agent -->
+- `src/components/participant/RecapRestrictions.tsx` + `RecapRestrictions.test.tsx` (NOUVEAUX)
+- `src/components/participant/AssistantRestrictions.tsx` (MODIFIÉ — vue `confirme` enrichie + handler `modifier`)
+- `src/components/participant/AssistantRestrictions.test.tsx` (MODIFIÉ — parcours récap + modifier)
 
 ### Change Log
 
-<!-- à remplir par le dev agent -->
+- 2026-06-26 : Story 3.3 implémentée — récap des sélections (chips groupés par type + rappel du seuil en clair + cas vide rassurant) dans la vue de confirmation, bouton « Modifier mes réponses » (retour en session). Aucun changement router/schéma (récap depuis l'état local, NFR5 intact). Tests 109/109, lint/typecheck/build verts. Statut → review.

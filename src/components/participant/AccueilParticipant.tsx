@@ -1,9 +1,11 @@
-import type { inferRouterOutputs } from "@trpc/server";
-
 import { SafeBadge } from "~/components/ui/SafeBadge";
-import type { AppRouter } from "~/server/api/root";
 
-type Acces = inferRouterOutputs<AppRouter>["participant"]["monAcces"];
+// Type minimal de ce que ce composant utilise (découplé de la forme complète
+// du retour de `monAcces`, qui porte aussi statut + restrictions depuis 3.4).
+type Acces = {
+  prenom: string;
+  repas: { lieu: string; date: Date; heure: string };
+};
 
 const formatDate = new Intl.DateTimeFormat("fr-FR", {
   dateStyle: "long",

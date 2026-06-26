@@ -1,7 +1,15 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
+import {
+  SEUIL_TOLERANCE_DEFAUT,
+  TOLERANCE_LABELS,
+} from "~/lib/restrictions";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
+
+// Borne haute du seuil = dernier index de libellé (source unique, évite un
+// off-by-one entre le Zod et la table de libellés côté UI).
+const SEUIL_TOLERANCE_MAX = TOLERANCE_LABELS.length - 1;
 
 /**
  * Router participant — procédures PUBLIQUES scopées au token (le participant
@@ -14,11 +22,24 @@ export const participantRouter = createTRPCRouter({
   monAcces: publicProcedure
     .input(z.object({ token: z.string().min(1) }))
     .query(async ({ ctx, input }) => {
-      const participant = await ctx.db.participant.findUnique({
-        where: { accessToken: input.token },
+      // `findFirst` (et non `findUnique`) pour pouvoir filtrer sur la relation :
+      // un repas expiré (ou purgé) devient indistinguable d'un token inconnu →
+      // NOT_FOUND → LienInvalide, sans fuite sur l'existence du token (NFR5).
+      const participant = await ctx.db.participant.findFirst({
+        where: {
+          accessToken: input.token,
+          repas: { expiresAt: { gt: new Date() } },
+        },
         select: {
           prenom: true,
+          statut: true,
           repas: { select: { lieu: true, date: true, heure: true } },
+          // Ses PROPRES restrictions (pour réafficher/modifier — story 3.4).
+          // Frontière étanche (NFR5) : aucune recette, aucun autre participant.
+          restrictions: {
+            select: { type: true, valeur: true, seuilTolerance: true },
+            orderBy: { createdAt: "asc" },
+          },
         },
       });
       if (!participant) throw new TRPCError({ code: "NOT_FOUND" });
@@ -42,7 +63,12 @@ export const participantRouter = createTRPCRouter({
               .object({
                 type: z.enum(["REGIME", "ALLERGIE", "NON_AIME"]),
                 valeur: z.string().trim().min(1).max(200),
-                seuilTolerance: z.number().int().min(0).max(5).optional(),
+                seuilTolerance: z
+                  .number()
+                  .int()
+                  .min(0)
+                  .max(SEUIL_TOLERANCE_MAX)
+                  .optional(),
               })
               .refine(
                 (r) => r.type === "NON_AIME" || r.seuilTolerance === undefined,
@@ -58,9 +84,13 @@ export const participantRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       // Frontière de sécurité : on résout le token côté serveur ; aucun id de
-      // participant n'est jamais accepté du client.
-      const participant = await ctx.db.participant.findUnique({
-        where: { accessToken: input.token },
+      // participant n'est jamais accepté du client. `findFirst` + filtre
+      // `expiresAt` → impossible d'écrire sur un repas expiré/purgé (NFR6).
+      const participant = await ctx.db.participant.findFirst({
+        where: {
+          accessToken: input.token,
+          repas: { expiresAt: { gt: new Date() } },
+        },
         select: { id: true },
       });
       if (!participant) throw new TRPCError({ code: "NOT_FOUND" });
@@ -74,10 +104,13 @@ export const participantRouter = createTRPCRouter({
               participantId,
               type: r.type,
               valeur: r.valeur,
-              // Seuil neutre par défaut (3/5) pour un non-aimé sans seuil ;
-              // toujours null pour régime/allergie.
+              // Seuil neutre par défaut (« Équilibré ») pour un non-aimé sans
+              // seuil ; toujours null pour régime/allergie. Source unique du
+              // défaut partagée avec le client (curseur de tolérance).
               seuilTolerance:
-                r.type === "NON_AIME" ? (r.seuilTolerance ?? 3) : null,
+                r.type === "NON_AIME"
+                  ? (r.seuilTolerance ?? SEUIL_TOLERANCE_DEFAUT)
+                  : null,
             })),
           });
         }

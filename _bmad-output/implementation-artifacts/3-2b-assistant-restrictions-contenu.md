@@ -4,7 +4,7 @@ baseline_commit: 5abb2089873df8e7cdbe9928c9cdc59f02f1fd25
 
 # Story 3.2b : Assistant restrictions — contenu des 3 étapes
 
-Status: review
+Status: done
 
 ## Story
 

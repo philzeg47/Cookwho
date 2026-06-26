@@ -14,6 +14,7 @@ vi.mock("~/env", () => ({
 }));
 
 import { appRouter } from "~/server/api/root";
+import { SEUIL_TOLERANCE_DEFAUT } from "~/lib/restrictions";
 
 function caller(db: unknown) {
   return appRouter.createCaller({
@@ -24,27 +25,40 @@ function caller(db: unknown) {
 }
 
 describe("participantRouter.monAcces", () => {
-  it("renvoie le prénom et le repas pour un token connu, sans exposer de recette", async () => {
-    const findUnique = vi.fn().mockResolvedValue({
+  it("renvoie le prénom, le statut, le repas et ses restrictions, sans exposer de recette", async () => {
+    const findFirst = vi.fn().mockResolvedValue({
       prenom: "Léa",
+      statut: "REPONDU",
       repas: { lieu: "Chez Léa", date: new Date(2026, 6, 1), heure: "12:30" },
+      restrictions: [
+        { type: "REGIME", valeur: "Végétarien", seuilTolerance: null },
+      ],
     });
-    const db = { participant: { findUnique } };
+    const db = { participant: { findFirst } };
 
     const res = await caller(db).participant.monAcces({ token: "tok" });
 
     expect(res.prenom).toBe("Léa");
-    const arg = findUnique.mock.calls[0]![0] as {
-      where: unknown;
-      select: unknown;
+    expect(res.statut).toBe("REPONDU");
+    expect(res.restrictions).toHaveLength(1);
+    const arg = findFirst.mock.calls[0]![0] as {
+      where: { accessToken: string; repas: { expiresAt: { gt: Date } } };
+      select: { statut?: unknown; restrictions?: unknown };
     };
-    expect(arg.where).toEqual({ accessToken: "tok" });
-    // Frontière étanche : le select ne demande ni recette ni autres participants.
-    expect(JSON.stringify(arg.select)).not.toMatch(/recette|recipe|participant/i);
+    expect(arg.where.accessToken).toBe("tok");
+    // Story 3.5 : filtre les repas expirés (pas de lecture après expiration).
+    expect(arg.where.repas.expiresAt.gt).toBeInstanceOf(Date);
+    // Réouverture (3.4) : le select demande statut + restrictions du participant.
+    expect(arg.select.statut).toBe(true);
+    expect(arg.select.restrictions).toBeTruthy();
+    // Frontière étanche : ni recette ni "participants" (autres convives).
+    expect(JSON.stringify(arg.select)).not.toMatch(/recette|recipe|participants/i);
   });
 
-  it("lève NOT_FOUND pour un token inconnu (pas de fuite)", async () => {
-    const db = { participant: { findUnique: vi.fn().mockResolvedValue(null) } };
+  it("lève NOT_FOUND pour un token inconnu OU un repas expiré (pas de fuite)", async () => {
+    // findFirst → null couvre les deux cas (token inconnu et repas expiré) :
+    // indistinguables côté client, donc aucune fuite.
+    const db = { participant: { findFirst: vi.fn().mockResolvedValue(null) } };
     await expect(
       caller(db).participant.monAcces({ token: "inconnu" }),
     ).rejects.toMatchObject({ code: "NOT_FOUND" });
@@ -60,7 +74,7 @@ function dbPourEnregistrement(participant: { id: string } | null) {
   const deleteMany = vi.fn().mockResolvedValue({ count: 0 });
   const createMany = vi.fn().mockResolvedValue({ count: 0 });
   const update = vi.fn().mockResolvedValue({});
-  const findUnique = vi.fn().mockResolvedValue(participant);
+  const findFirst = vi.fn().mockResolvedValue(participant);
   const tx = {
     restriction: { deleteMany, createMany },
     participant: { update },
@@ -68,8 +82,8 @@ function dbPourEnregistrement(participant: { id: string } | null) {
   const $transaction = vi.fn((fn: (t: typeof tx) => Promise<unknown>) =>
     fn(tx),
   );
-  const db = { participant: { findUnique }, $transaction };
-  return { db, deleteMany, createMany, update, findUnique, $transaction };
+  const db = { participant: { findFirst }, $transaction };
+  return { db, deleteMany, createMany, update, findFirst, $transaction };
 }
 
 describe("participantRouter.enregistrerRestrictions", () => {
@@ -86,10 +100,14 @@ describe("participantRouter.enregistrerRestrictions", () => {
     });
 
     expect(res).toEqual({ ok: true });
-    expect(m.findUnique).toHaveBeenCalledWith({
-      where: { accessToken: "tok" },
-      select: { id: true },
-    });
+    const argResolve = m.findFirst.mock.calls[0]![0] as {
+      where: { accessToken: string; repas: { expiresAt: { gt: Date } } };
+      select: { id: boolean };
+    };
+    expect(argResolve.where.accessToken).toBe("tok");
+    // Story 3.5 : impossible d'écrire sur un repas expiré.
+    expect(argResolve.where.repas.expiresAt.gt).toBeInstanceOf(Date);
+    expect(argResolve.select).toEqual({ id: true });
     expect(m.deleteMany).toHaveBeenCalledWith({
       where: { participantId: "p1" },
     });
@@ -108,7 +126,7 @@ describe("participantRouter.enregistrerRestrictions", () => {
     });
   });
 
-  it("applique un seuil neutre (3) à un non-aimé sans seuil fourni", async () => {
+  it("applique le seuil neutre par défaut à un non-aimé sans seuil fourni", async () => {
     const m = dbPourEnregistrement({ id: "p1" });
 
     await caller(m.db).participant.enregistrerRestrictions({
@@ -119,7 +137,8 @@ describe("participantRouter.enregistrerRestrictions", () => {
     const dataCreee = m.createMany.mock.calls[0]![0] as {
       data: Array<{ seuilTolerance: number | null }>;
     };
-    expect(dataCreee.data[0]!.seuilTolerance).toBe(3);
+    // Défaut serveur = SEUIL_TOLERANCE_DEFAUT (« Équilibré ») = source unique.
+    expect(dataCreee.data[0]!.seuilTolerance).toBe(SEUIL_TOLERANCE_DEFAUT);
   });
 
   it("accepte un tableau vide (aucune restriction obligatoire) sans createMany", async () => {
@@ -139,7 +158,8 @@ describe("participantRouter.enregistrerRestrictions", () => {
     });
   });
 
-  it("lève NOT_FOUND pour un token inconnu (pas de transaction)", async () => {
+  it("lève NOT_FOUND pour un token inconnu ou un repas expiré (pas de transaction)", async () => {
+    // findFirst → null = token inconnu OU repas expiré (filtre expiresAt 3.5).
     const m = dbPourEnregistrement(null);
 
     await expect(
