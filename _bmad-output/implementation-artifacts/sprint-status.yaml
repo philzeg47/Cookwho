@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-06-19
-last_updated: 2026-06-26  # Epic 3 terminé (revue combinée 3.2b→3.5, 2 patches)
+last_updated: 2026-06-27  # story 4.0 → review
 project: CookWho
 project_key: NOKEY
 tracking_system: file-system
@@ -72,8 +72,8 @@ development_status:
   epic-3-retrospective: optional
 
   # Epic 4 : Moteur de sécurité & compatibilité
-  epic-4: backlog
-  4-0-dictionnaire-ingredient-allergene: backlog
+  epic-4: in-progress
+  4-0-dictionnaire-ingredient-allergene: review
   4-1-detection-des-allergenes-interne: backlog
   4-2-source-de-recettes-interchangeable-cache: backlog
   4-3-filtre-du-mur: backlog
