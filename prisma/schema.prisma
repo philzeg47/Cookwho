@@ -86,7 +86,30 @@ model Participant {
     createdAt   DateTime          @default(now())
     updatedAt   DateTime          @updatedAt
 
+    restrictions Restriction[]
+
     @@index([repasId])
+}
+
+enum TypeRestriction {
+    REGIME
+    ALLERGIE
+    NON_AIME
+}
+
+// Restriction alimentaire déclarée par un participant (story 3.2).
+// onDelete: Cascade — purge RGPD (story 2.5) : supprimer un Repas cascade
+// jusqu'aux participants puis à leurs restrictions (données de santé, NFR6).
+model Restriction {
+    id             String          @id @default(cuid())
+    participant    Participant     @relation(fields: [participantId], references: [id], onDelete: Cascade)
+    participantId  String
+    type           TypeRestriction
+    valeur         String
+    seuilTolerance Int? // 0-5, seulement pour NON_AIME
+    createdAt      DateTime        @default(now())
+
+    @@index([participantId])
 }
 
 model VerificationToken {
