@@ -4,7 +4,7 @@ baseline_commit: 90a6e3ec4b2dd5d5e27a797c7fa7177f9402f83b
 
 # Story 4.0 : Dictionnaire ingrédient→allergène (source, schéma & seed)
 
-Status: review
+Status: done
 
 ## Story
 

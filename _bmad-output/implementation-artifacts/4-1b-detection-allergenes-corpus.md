@@ -4,7 +4,7 @@ baseline_commit: ff6af85
 
 # Story 4.1b : Détection des allergènes (`detect`) + corpus d'or & gate CI
 
-Status: review
+Status: done
 
 ## Story
 
@@ -65,6 +65,17 @@ so that aucune recette dangereuse ne soit jamais présentée comme sûre. (FR13,
 
 - [x] **Tâche 6 — Validations** (AC: 7)
   - [x] `npm run test`, `lint`, `typecheck`, `SKIP_ENV_VALIDATION=1 npm run build` → tout vert.
+
+### Review Findings
+
+> Revue de code adversariale du 2026-06-27 (3 couches), périmètre **moteur d'allergènes /core (4.0 → 4.1b)**, diff depuis `90a6e3e`. Verdict : **tous les ACs satisfaits, gate asymétrique correct, pureté `/core` respectée** (Acceptance Auditor). MAIS la garantie « zéro faux négatif » repose sur un dictionnaire maison **incomplet** : les Hunters trouvent de vrais trous dangereux sur des ingrédients courants. 2 patches · 4 reports · 3 écartés.
+
+- [x] [Review][Patch] **[High]** Lacunes du dictionnaire à fort risque (faux négatifs sur ingrédients très courants) : poissons (maquereau, truite, dorade, sole, hareng, lotte, colin, merlu, bar), fromages (gruyère, emmental, comté, cheddar, feta, ricotta, chèvre, raclette, mascarpone), termes génériques (« fruits de mer » → crustacés+mollusques, « coquillage », « crustacé », « mollusque », « bulot », « fruits à coque »), « nuoc-mâm » seul, « gluten/couscous/gnocchi ». [dictionnaire.ts, fixtures] — ✅ +28 entrées + 6 cas de corpus
+- [x] [Review][Patch] **[Med]** Tolérance pluriel **unidirectionnelle** → rendue **bidirectionnelle** : `tokenCorrespond` compare désormais via `racine()` (suffixe `s`/`x` retiré des deux côtés) → « sulfite » matche la clé « sulfites ». [detect.ts] — ✅ + cas de corpus « sulfite » singulier
+- [x] [Review][Defer] **[Med→curation continue]** Le gate « couvre 14 » protège les **tokens-clés présents dans les fixtures**, pas les clés sœurs : supprimer « homard »/« crabe » en gardant « crevette » passe inaperçu. Enrichir vers des fixtures **par clé à fort enjeu** (poissons, fromages, mollusques). [corpus.test.ts, fixtures]
+- [x] [Review][Defer] **[Low→curation]** Sur-détection « noix de muscade » et « noix de coco » → FRUITS_A_COQUE (faux positif conservateur, sûr mais nuit à l'UX : exclut la muscade/coco pour un allergique aux fruits à coque). Raffinement « clé la plus longue gagnante » ou exclusions explicites. [dictionnaire.ts]
+- [x] [Review][Defer] **[Low]** Pluriels irréguliers `-al`→`-aux` non transformés (aucune clé concernée aujourd'hui ; à traiter si une clé future l'exige). [detect.ts]
+- [x] [Review][Defer] **[Low→post-V1]** Complétude exhaustive du dictionnaire = tâche de **curation continue** (piste Open Food Facts hors-ligne, per architecture). Le présent dictionnaire est volontairement non-exhaustif (cf. story 4.0/4.1b). [dictionnaire.ts]
 
 ## Dev Notes
 
@@ -172,3 +183,4 @@ claude-opus-4-8 (bmad-dev-story)
 ### Change Log
 
 - 2026-06-27 : Story 4.1b implémentée — `detect()` (tokens délimités, tolérance pluriel, conservateur) + corpus d'or annoté + gate CI asymétrique (faux négatif = build rouge). Sabotage de contrôle validé. 162/162, lint (boundaries)/typecheck/build verts. Statut → review. **Détection d'allergènes interne opérationnelle (FR13).**
+- 2026-06-27 : Revue de code combinée moteur /core (4.0→4.1b). Tous ACs satisfaits, gate asymétrique correct, pureté `/core` OK. 2 patches appliqués : (P1) +28 entrées dico fort-risque (poissons, fromages, génériques, nuoc-mâm, gluten) + 6 cas de corpus ; (P2) tolérance pluriel bidirectionnelle (`racine()`). 4 reports de curation tracés (`deferred-work.md`). Tests 168/168. Statut → done. **Moteur d'allergènes Epic 4 (4.0→4.1b) terminé.**

@@ -39,6 +39,9 @@ export const DICTIONNAIRE_ALLERGENES: readonly EntreeDictionnaire[] = [
   { ingredient: "semoule", allergenes: ["GLUTEN"], provenance: MAISON },
   { ingredient: "boulgour", allergenes: ["GLUTEN"], provenance: MAISON },
   { ingredient: "biere", allergenes: ["GLUTEN"], provenance: MAISON },
+  { ingredient: "gluten", allergenes: ["GLUTEN"], provenance: REG },
+  { ingredient: "couscous", allergenes: ["GLUTEN"], provenance: MAISON },
+  { ingredient: "gnocchi", allergenes: ["GLUTEN"], provenance: MAISON },
 
   // — Crustacés —
   { ingredient: "crevette", allergenes: ["CRUSTACES"], provenance: REG },
@@ -48,6 +51,9 @@ export const DICTIONNAIRE_ALLERGENES: readonly EntreeDictionnaire[] = [
   { ingredient: "langoustine", allergenes: ["CRUSTACES"], provenance: REG },
   { ingredient: "ecrevisse", allergenes: ["CRUSTACES"], provenance: REG },
   { ingredient: "tourteau", allergenes: ["CRUSTACES"], provenance: MAISON },
+  { ingredient: "crustace", allergenes: ["CRUSTACES"], provenance: REG },
+  // Terme générique : couvre crustacés ET mollusques (sens conservateur).
+  { ingredient: "fruits de mer", allergenes: ["CRUSTACES", "MOLLUSQUES"], provenance: MAISON },
 
   // — Œufs —
   { ingredient: "oeuf", allergenes: ["OEUFS"], provenance: REG },
@@ -63,7 +69,17 @@ export const DICTIONNAIRE_ALLERGENES: readonly EntreeDictionnaire[] = [
   { ingredient: "cabillaud", allergenes: ["POISSON"], provenance: REG },
   { ingredient: "anchois", allergenes: ["POISSON"], provenance: REG },
   { ingredient: "sardine", allergenes: ["POISSON"], provenance: REG },
+  { ingredient: "maquereau", allergenes: ["POISSON"], provenance: REG },
+  { ingredient: "truite", allergenes: ["POISSON"], provenance: REG },
+  { ingredient: "dorade", allergenes: ["POISSON"], provenance: REG },
+  { ingredient: "sole", allergenes: ["POISSON"], provenance: REG },
+  { ingredient: "hareng", allergenes: ["POISSON"], provenance: REG },
+  { ingredient: "lotte", allergenes: ["POISSON"], provenance: REG },
+  { ingredient: "colin", allergenes: ["POISSON"], provenance: REG },
+  { ingredient: "merlu", allergenes: ["POISSON"], provenance: REG },
+  { ingredient: "bar", allergenes: ["POISSON"], provenance: REG },
   { ingredient: "sauce nuoc-mam", allergenes: ["POISSON"], provenance: MAISON },
+  { ingredient: "nuoc-mam", allergenes: ["POISSON"], provenance: MAISON },
   { ingredient: "surimi", allergenes: ["POISSON", "CRUSTACES"], provenance: MAISON },
 
   // — Arachides —
@@ -91,6 +107,15 @@ export const DICTIONNAIRE_ALLERGENES: readonly EntreeDictionnaire[] = [
   { ingredient: "lactose", allergenes: ["LAIT"], provenance: REG },
   { ingredient: "parmesan", allergenes: ["LAIT"], provenance: MAISON },
   { ingredient: "mozzarella", allergenes: ["LAIT"], provenance: MAISON },
+  { ingredient: "gruyere", allergenes: ["LAIT"], provenance: MAISON },
+  { ingredient: "emmental", allergenes: ["LAIT"], provenance: MAISON },
+  { ingredient: "comte", allergenes: ["LAIT"], provenance: MAISON },
+  { ingredient: "cheddar", allergenes: ["LAIT"], provenance: MAISON },
+  { ingredient: "feta", allergenes: ["LAIT"], provenance: MAISON },
+  { ingredient: "ricotta", allergenes: ["LAIT"], provenance: MAISON },
+  { ingredient: "chevre", allergenes: ["LAIT"], provenance: MAISON },
+  { ingredient: "raclette", allergenes: ["LAIT"], provenance: MAISON },
+  { ingredient: "mascarpone", allergenes: ["LAIT"], provenance: MAISON },
 
   // — Fruits à coque —
   { ingredient: "amande", allergenes: ["FRUITS_A_COQUE"], provenance: REG },
@@ -102,6 +127,7 @@ export const DICTIONNAIRE_ALLERGENES: readonly EntreeDictionnaire[] = [
   { ingredient: "noix de macadamia", allergenes: ["FRUITS_A_COQUE"], provenance: REG },
   { ingredient: "noix du bresil", allergenes: ["FRUITS_A_COQUE"], provenance: REG },
   { ingredient: "pralin", allergenes: ["FRUITS_A_COQUE"], provenance: MAISON },
+  { ingredient: "fruits a coque", allergenes: ["FRUITS_A_COQUE"], provenance: REG },
 
   // — Céleri —
   { ingredient: "celeri", allergenes: ["CELERI"], provenance: REG },
@@ -136,4 +162,7 @@ export const DICTIONNAIRE_ALLERGENES: readonly EntreeDictionnaire[] = [
   { ingredient: "seiche", allergenes: ["MOLLUSQUES"], provenance: REG },
   { ingredient: "coquille saint-jacques", allergenes: ["MOLLUSQUES"], provenance: MAISON },
   { ingredient: "escargot", allergenes: ["MOLLUSQUES"], provenance: MAISON },
+  { ingredient: "coquillage", allergenes: ["MOLLUSQUES"], provenance: MAISON },
+  { ingredient: "mollusque", allergenes: ["MOLLUSQUES"], provenance: REG },
+  { ingredient: "bulot", allergenes: ["MOLLUSQUES"], provenance: REG },
 ];

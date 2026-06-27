@@ -25,9 +25,18 @@ const INDEX: ReadonlyArray<{ tokens: string[]; allergenes: AllergeneUE[] }> =
     allergenes: entree.allergenes,
   }));
 
-/** Un token d'ingrédient correspond-il au token de clé (tolérance pluriel) ? */
+/** Retire un éventuel suffixe pluriel `s`/`x` (réduction simple, conservatrice). */
+function racine(mot: string): string {
+  return mot.replace(/[sx]$/, "");
+}
+
+/**
+ * Un token d'ingrédient correspond-il au token de clé ? Tolérance pluriel
+ * BIDIRECTIONNELLE (suffixe `s`/`x` des deux côtés) : « sulfite » matche la clé
+ * « sulfites » et inversement. Sens conservateur (sur-détection = sûr).
+ */
 function tokenCorrespond(token: string, cle: string): boolean {
-  return token === cle || token === `${cle}s` || token === `${cle}x`;
+  return token === cle || racine(token) === racine(cle);
 }
 
 /** Les `cleTokens` forment-ils une sous-séquence contiguë de `tokens` ? */

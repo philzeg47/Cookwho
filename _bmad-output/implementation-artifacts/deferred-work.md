@@ -23,6 +23,15 @@
 - **[Low → décision produit]** Soumissions concurrentes (deux onglets) : `deleteMany` puis `createMany` sans garde d'idempotence → dernier-écrit-gagne. Sémantique « remplace » probablement voulue ; à confirmer.
 - **[Low → story 3.4]** `monAcces` ne renvoie pas `statut` ; nécessaire pour accueillir un participant déjà REPONDU (« On a déjà tes préférences ✓ »). Déjà dans le périmètre de 3.4. ✅ RÉSOLU (3.4).
 
+## Deferred from: code review of moteur d'allergènes (stories 4.0 → 4.1b) (2026-06-27)
+
+> Revue moteur /core. ACs OK, gate asymétrique correct, pureté respectée. 2 patches (lacunes dico fort risque + tolérance pluriel bidirectionnelle) traités à part. Reports ci-dessous = curation continue / raffinements.
+
+- **[Med → curation continue]** Le gate « couvre 14 allergènes » ne protège que les **tokens-clés présents dans les fixtures**, pas les clés sœurs : supprimer `homard`/`crabe` en gardant `crevette` ne casse pas le build. Ajouter progressivement des fixtures **par clé à fort enjeu** (poissons, fromages, mollusques) pour durcir le gate.
+- **[Low → curation]** Sur-détection conservatrice : `noix de muscade` (muscade) et `noix de coco` (coco) → FRUITS_A_COQUE via la clé `noix` (ni l'une ni l'autre n'est un fruit à coque réglementaire UE). Sûr côté sécurité mais nuit à l'UX. Raffinement possible : « clé la plus longue gagnante » ou liste d'exclusions explicites.
+- **[Low]** Pluriels irréguliers `-al`→`-aux` non transformés par `tokenCorrespond` (aucune clé concernée actuellement ; à couvrir si une clé future l'exige, ex. `corail`/`coraux`).
+- **[Low → post-V1]** Complétude exhaustive du dictionnaire = **curation continue**. Le dictionnaire maison est volontairement non-exhaustif (stories 4.0/4.1b). Piste d'enrichissement tracé hors-ligne via Open Food Facts (architecture, différé).
+
 ## Deferred from: code review of Epic 3 (stories 3.2b → 3.5) (2026-06-26)
 
 > Revue combinée Epic 3. Backbone propre (tous ACs OK, NFR4/5/6 vérifiés). 2 patches data-fidelité appliqués sur le seuil de tolérance. Reports ci-dessous = polish UX/robustesse, non bloquants.

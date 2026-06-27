@@ -88,5 +88,35 @@
     "ingredients": ["Tomate", "Basilic", "Huile d'olive", "Sel"],
     "allergenesAttendus": [],
     "note": "Aucun allergène connu → tout en ingredientsNonReconnus (rien d'attendu)."
+  },
+  {
+    "ingredients": ["Filet de truite", "Citron", "Aneth"],
+    "allergenesAttendus": ["POISSON"],
+    "note": "Poisson courant (truite) — comblé en revue."
+  },
+  {
+    "ingredients": ["Gruyère râpé", "Pain de campagne"],
+    "allergenesAttendus": ["LAIT", "GLUTEN"],
+    "note": "Fromage courant (gruyère) + gluten (pain) — comblé en revue."
+  },
+  {
+    "ingredients": ["Fruits de mer", "Persil", "Ail"],
+    "allergenesAttendus": ["CRUSTACES", "MOLLUSQUES"],
+    "note": "Terme générique → crustacés + mollusques (conservateur)."
+  },
+  {
+    "ingredients": ["Nuoc-mâm", "Riz", "Coriandre"],
+    "allergenesAttendus": ["POISSON"],
+    "note": "Nuoc-mâm seul (sans « sauce ») doit matcher — comblé en revue."
+  },
+  {
+    "ingredients": ["Gluten de blé", "Eau"],
+    "allergenesAttendus": ["GLUTEN"],
+    "note": "Nom littéral de l'allergène (« gluten ») — comblé en revue."
+  },
+  {
+    "ingredients": ["Raisins secs", "Sulfite"],
+    "allergenesAttendus": ["SULFITES"],
+    "note": "Singulier « sulfite » doit matcher la clé plurielle « sulfites » (tolérance pluriel bidirectionnelle)."
   }
 ]

@@ -4,7 +4,7 @@ baseline_commit: e23e29a
 
 # Story 4.1a : Normalisation des ingrédients (`normalize`)
 
-Status: review
+Status: done
 
 ## Story
 
