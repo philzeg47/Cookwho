@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-06-19
-last_updated: 2026-06-27  # story 4.4b → review (génération bout-en-bout)
+last_updated: 2026-06-28  # revue moteur génération 4.2→4.4b → done (6 patches)
 project: CookWho
 project_key: NOKEY
 tracking_system: file-system
@@ -77,14 +77,14 @@ development_status:
   # 4.1 découpée (story dense) : 4.1a normalize (pur) + 4.1b detect & corpus d'or + gate CI
   4-1a-normalize-ingredients: done
   4-1b-detection-allergenes-corpus: done
-  4-2-source-de-recettes-interchangeable-cache: review
-  4-3-filtre-du-mur: review
+  4-2-source-de-recettes-interchangeable-cache: done
+  4-3-filtre-du-mur: done
   # 4.3 = mur allergènes + régimes-allergènes (gluten/lait). Régimes alimentaires
   # (végétarien/vegan/halal/casher/porc) différés : exigent un dico ingrédient→propriété.
   4-3b-regimes-alimentaires: backlog
   # 4.4 découpée : 4.4a /core (curseur + resoudre, chemin nominal) + 4.4b serveur (génération tRPC + régénérer)
-  4-4a-curseur-resoudre: review
-  4-4b-generation-serveur: review
+  4-4a-curseur-resoudre: done
+  4-4b-generation-serveur: done
   4-5-degradation-elegante: backlog
   4-6-echec-explicatif: backlog
   4-7-generation-forcee: backlog

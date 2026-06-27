@@ -58,6 +58,16 @@ describe("mur — verdict", () => {
     expect(mur(c, sansInconnu(["GLUTEN"])).exclu).toBe(true);
   });
 
+  it("étiquette la raison ALLERGIE vs REGIME selon la provenance", () => {
+    const cA = construireContraintes([{ type: "ALLERGIE", valeur: "Arachides" }]);
+    const vA = mur(cA, sansInconnu(["ARACHIDES"]));
+    if (vA.exclu) expect(vA.raisons[0]!.type).toBe("ALLERGIE");
+
+    const cR = construireContraintes([{ type: "REGIME", valeur: "Sans gluten" }]);
+    const vR = mur(cR, sansInconnu(["GLUTEN"]));
+    if (vR.exclu) expect(vR.raisons[0]!.type).toBe("REGIME");
+  });
+
   it("NE PAS exclure si l'allergène interdit est absent", () => {
     const c = construireContraintes([{ type: "ALLERGIE", valeur: "Arachides" }]);
     const v = mur(c, sansInconnu(["LAIT"]));

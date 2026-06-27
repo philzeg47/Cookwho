@@ -12,7 +12,12 @@ describe("curseur — pénalité des goûts", () => {
     const strict = curseur(recette, [{ valeur: "Champignons", seuilTolerance: 0 }]);
     const souple = curseur(recette, [{ valeur: "Champignons", seuilTolerance: 4 }]);
     expect(strict).toBeGreaterThan(souple);
-    expect(souple).toBeGreaterThanOrEqual(0);
+  });
+
+  it("« Souple » (seuil max UI = 4) n'ajoute AUCUNE pénalité", () => {
+    expect(
+      curseur(["Risotto aux champignons"], [{ valeur: "Champignons", seuilTolerance: 4 }]),
+    ).toBe(0);
   });
 
   it("matche un non-aimé multi-mots et ignore les sous-chaînes", () => {

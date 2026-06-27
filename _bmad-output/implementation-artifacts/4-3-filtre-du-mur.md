@@ -4,7 +4,7 @@ baseline_commit: ca729b2
 
 # Story 4.3 : Filtre du mur (exclusion stricte)
 
-Status: review
+Status: done
 
 ## Story
 

@@ -32,6 +32,14 @@
 - **[Low]** Pluriels irréguliers `-al`→`-aux` non transformés par `tokenCorrespond` (aucune clé concernée actuellement ; à couvrir si une clé future l'exige, ex. `corail`/`coraux`).
 - **[Low → post-V1]** Complétude exhaustive du dictionnaire = **curation continue**. Le dictionnaire maison est volontairement non-exhaustif (stories 4.0/4.1b). Piste d'enrichissement tracé hors-ligne via Open Food Facts (architecture, différé).
 
+## Deferred from: code review of moteur de génération (stories 4.2 → 4.4b) (2026-06-27)
+
+> Revue combinée. Invariant de sécurité OK (aucune recette violant le mur retenue), 27/27 ACs satisfaits. 6 patches de correction appliqués. Reports ci-dessous = à traiter quand le contexte l'exige.
+
+- **[Med → quand la recherche par requête sera branchée]** Cache `RecetteCache` clé sur `source` seul (pas `requete`/`limite`) : aujourd'hui inoffensif car la génération utilise une requête vide (pool large par source, borné par `take` après le patch). Mais l'API `recupererRecettes({ requete })` ment : une 2ᵉ requête distincte resert les recettes de la 1ʳᵉ. Quand la recherche par mots-clés arrivera : colonne `requete` (normalisée) + `@@unique([source, requete, sourceRef])` + filtrer `lireCache` dessus.
+- **[Low → 4.5]** `resoudre` renvoie `PAS_ASSEZ` sans distinguer « épuisé après régénérer » de « trop peu dès le départ ». La dégradation élégante (4.5) raffinera ce Result.
+- **[Low]** `resoudre` fait confiance au `detection` fourni dans `RecetteEntree` (cohérent avec `ingredients` dans le pipeline actuel, dérivés du même texte). Pour un futur appelant qui construirait `detection` séparément, dériver `detection` dans `resoudre` ou documenter/asserter l'invariant.
+
 ## Deferred from: code review of Epic 3 (stories 3.2b → 3.5) (2026-06-26)
 
 > Revue combinée Epic 3. Backbone propre (tous ACs OK, NFR4/5/6 vérifiés). 2 patches data-fidelité appliqués sur le seuil de tolérance. Reports ci-dessous = polish UX/robustesse, non bloquants.

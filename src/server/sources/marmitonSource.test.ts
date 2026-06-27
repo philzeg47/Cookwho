@@ -57,6 +57,17 @@ describe("marmitonSource (adapter)", () => {
     });
   });
 
+  it("écarte les recettes sans url/nom (identifiant de cache instable)", async () => {
+    searchRecipes.mockResolvedValueOnce([
+      { name: "OK", url: "u1", ingredients: ["x"] },
+      { name: "Sans url", url: "", ingredients: ["y"] },
+      { name: "", url: "u3", ingredients: ["z"] },
+    ]);
+    const res = await marmitonSource.chercher({ requete: "test" });
+    expect(res).toHaveLength(1);
+    expect(res[0]!.sourceRef).toBe("u1");
+  });
+
   it("porte le nom de source « marmiton »", () => {
     expect(marmitonSource.nom).toBe("marmiton");
   });

@@ -4,7 +4,7 @@ baseline_commit: b171529
 
 # Story 4.4a : Curseur & résolution (/core — chemin nominal)
 
-Status: review
+Status: done
 
 ## Story
 

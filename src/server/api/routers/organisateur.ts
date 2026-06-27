@@ -151,7 +151,7 @@ export const organisateurRouter = createTRPCRouter({
     .input(
       z.object({
         repasId: z.string(),
-        exclure: z.array(z.string()).optional(),
+        exclure: z.array(z.string()).max(200).optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {

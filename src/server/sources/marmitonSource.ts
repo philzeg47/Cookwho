@@ -19,8 +19,11 @@ export const marmitonSource: SourceDeRecettes = {
       .build();
     const recettes = await searchRecipes(qs);
 
+    // Scraper non-officiel : écarter les entrées sans identifiant/titre stable
+    // (un `url` vide ferait collisionner les lignes de cache).
+    const valides = recettes.filter((r) => r.url && r.name);
     const limitees =
-      typeof limite === "number" ? recettes.slice(0, limite) : recettes;
+      typeof limite === "number" ? valides.slice(0, limite) : valides;
 
     return limitees.map(
       (r): RecetteBrute => ({

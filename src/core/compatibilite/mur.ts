@@ -19,6 +19,8 @@ import {
 export type Contraintes = {
   /** Allergènes durs à exclure (codes) : allergies déclarées + régimes-allergènes. */
   allergenesInterdits: AllergeneUE[];
+  /** Sous-ensemble venant d'une ALLERGIE déclarée (pour étiqueter la raison). */
+  allergiesCodes?: AllergeneUE[];
   /** Ce que le mur ne peut PAS garantir → incertitude signalée (jamais ignoré). */
   incertitudes: string[];
 };
@@ -59,6 +61,7 @@ export function construireContraintes(
   restrictions: RestrictionEntree[],
 ): Contraintes {
   const interdits = new Set<AllergeneUE>();
+  const allergies = new Set<AllergeneUE>();
   const incertitudes: string[] = [];
 
   for (const r of restrictions) {
@@ -68,8 +71,10 @@ export function construireContraintes(
 
     if (r.type === "ALLERGIE") {
       const code = LIBELLE_VERS_CODE[cle];
-      if (code) interdits.add(code);
-      else incertitudes.push(`allergie non vérifiable : ${valeur}`);
+      if (code) {
+        interdits.add(code);
+        allergies.add(code);
+      } else incertitudes.push(`allergie non vérifiable : ${valeur}`);
     } else if (r.type === "REGIME") {
       const code = REGIMES_VERS_ALLERGENE[cle];
       if (code) interdits.add(code);
@@ -78,7 +83,11 @@ export function construireContraintes(
     // NON_AIME → ignoré (curseur, 4.4).
   }
 
-  return { allergenesInterdits: [...interdits], incertitudes };
+  return {
+    allergenesInterdits: [...interdits],
+    allergiesCodes: [...allergies],
+    incertitudes,
+  };
 }
 
 /**
@@ -90,9 +99,17 @@ export function mur(
   detection: ResultatDetection,
 ): VerdictMur {
   const interdits = new Set(contraintes.allergenesInterdits);
+  // Étiquette : ALLERGIE si le code vient d'une allergie déclarée, sinon REGIME.
+  // Sans provenance (`allergiesCodes` absent), on retombe sur ALLERGIE (le plus sévère).
+  const codesAllergie = new Set(
+    contraintes.allergiesCodes ?? contraintes.allergenesInterdits,
+  );
   const raisons: RaisonExclusion[] = detection.allergenes
     .filter((a) => interdits.has(a))
-    .map((allergene) => ({ type: "ALLERGIE", allergene }));
+    .map((allergene) => ({
+      type: codesAllergie.has(allergene) ? "ALLERGIE" : "REGIME",
+      allergene,
+    }));
 
   if (raisons.length > 0) return { exclu: true, raisons };
 

@@ -17,6 +17,7 @@ export type RecetteEntree = {
 export type RecetteRetenue = {
   ref: string;
   titre: string;
+  ingredients: string[];
   incertain: boolean;
   raisonsIncertitude: string[];
   penalite: number;
@@ -52,6 +53,7 @@ export function resoudre(
     compatibles.push({
       ref: r.ref,
       titre: r.titre,
+      ingredients: r.ingredients,
       incertain: verdict.incertain,
       raisonsIncertitude: verdict.raisonsIncertitude,
       penalite: curseur(r.ingredients, nonAimes),

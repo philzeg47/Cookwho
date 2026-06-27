@@ -4,7 +4,7 @@ baseline_commit: 0fcd910
 
 # Story 4.4b : Génération serveur (procédure tRPC + pipeline + régénérer)
 
-Status: review
+Status: done
 
 ## Story
 
@@ -50,6 +50,20 @@ so that je choisis un plat qui plaît au groupe. (FR9, NFR2)
 
 - [x] **Tâche 4 — Validations** (AC: 6)
   - [x] `npm run test`, `lint`, `typecheck`, `SKIP_ENV_VALIDATION=1 npm run build` → tout vert.
+
+### Review Findings
+
+> Revue de code adversariale du 2026-06-27 (3 couches), **périmètre combiné moteur de génération (4.2 → 4.4b)**, diff depuis `9715a82`. Verdict : **invariant de sécurité TIENT** (aucune recette violant le mur n'est jamais retenue, prouvé par 3 layers) ; **27/27 ACs satisfaits** ; pureté `/core` + frontière source + NFR5 OK. Findings = correction/qualité. 6 patches · 3 reports · 5 écartés.
+
+- [x] [Review][Patch] **[Med]** Échelle du seuil incohérente : `curseur` utilise `SEUIL_TOLERANCE_MAX = 5` mais l'UI/Zod plafonne à **4** → un non-aimé « Souple » donne une pénalité 1 au lieu de 0. [src/core/compatibilite/curseur.ts] — ✅ `MAX=4` + test « souple → 0 »
+- [x] [Review][Patch] **[Med]** `mur` étiquette **toujours** `"ALLERGIE"`, même pour un régime → message faux (FR16). [src/core/compatibilite/mur.ts] — ✅ provenance `allergiesCodes` dans `construireContraintes` ; `mur` étiquette ALLERGIE/REGIME + test
+- [x] [Review][Patch] **[Med]** `marmitonSource` : `url`/`name` non gardés → collision de cache. [src/server/sources/marmitonSource.ts] — ✅ filtre des items falsy + test
+- [x] [Review][Patch] **[Med]** Lecture de cache non bornée (`findMany` sans `take`). [src/server/sources/cache.ts] — ✅ `take: limite` + `orderBy: fetchedAt desc` (lecture + repli)
+- [x] [Review][Patch] **[Low]** `RecetteRetenue` sans `ingredients` (AC3 + Epic 5). [src/core/compatibilite/resoudre.ts] — ✅ champ ajouté + peuplé
+- [x] [Review][Patch] **[Low]** `exclure` non plafonné. [src/server/api/routers/organisateur.ts] — ✅ `.max(200)`
+- [x] [Review][Defer] **[Med→quand la recherche par requête arrivera]** Cache **clé sur `source` seul** (pas `requete`) : après la 1ʳᵉ requête peuplée, toute autre `requete` resert les recettes de la 1ʳᵉ. Non exercé aujourd'hui (la génération utilise une requête vide = pool large par source). Quand la recherche par mots-clés sera branchée : ajouter une colonne `requete` à `RecetteCache` + clé unique. [cache.ts, schema.prisma]
+- [x] [Review][Defer] **[Low→4.5]** `resoudre` ne distingue pas « pool épuisé après régénérer » de « trop peu dès le départ » (les deux → `PAS_ASSEZ`). La dégradation (4.5) raffinera. [resoudre.ts]
+- [x] [Review][Defer] **[Low]** `resoudre` ne revalide pas la cohérence `detection` ↔ `ingredients` d'une `RecetteEntree` fournie (sûr dans le pipeline actuel car dérivés du même texte ; risque pour un futur appelant). Documenter l'invariant ou dériver `detection` dans `resoudre`. [resoudre.ts]
 
 ## Dev Notes
 
@@ -153,3 +167,4 @@ claude-opus-4-8 (bmad-dev-story)
 ### Change Log
 
 - 2026-06-27 : Story 4.4b implémentée — orchestrateur `genererPourRepas` (ownership, REPONDU-only, source/cache → detect → mur → resoudre) + procédure tRPC `genererRecettes` (protégée, déléguante). Sécurité bout-en-bout + régénérer + incertitude testés hors-ligne. 213/213, lint/typecheck/build verts. Statut → review. **Génération de recettes (FR9) appelable de bout en bout.**
+- 2026-06-28 : Revue de code combinée moteur génération (4.2→4.4b, 3 couches). Invariant de sécurité confirmé (aucune recette violant le mur retenue), 27/27 ACs satisfaits. 6 patches appliqués (échelle seuil, étiquette ALLERGIE/REGIME, garde url marmiton, borne lecture cache, `ingredients` dans RecetteRetenue, plafond `exclure`). 3 reports tracés (`deferred-work.md`). Tests 216/216. Statut → done. **Moteur de génération Epic 4 (4.2→4.4b) terminé.**

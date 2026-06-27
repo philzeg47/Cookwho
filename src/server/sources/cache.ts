@@ -28,11 +28,13 @@ function dateExpiration(maintenant: Date): Date {
 export async function lireCache(
   db: DbCache,
   source: string,
-  { maintenant = new Date() }: { maintenant?: Date } = {},
+  { maintenant = new Date(), limite }: { maintenant?: Date; limite?: number } = {},
 ): Promise<RecetteBrute[]> {
   return db.recetteCache.findMany({
     where: { source, fetchedAt: { gt: dateExpiration(maintenant) } },
     select: { source: true, sourceRef: true, titre: true, ingredientsTexte: true },
+    orderBy: { fetchedAt: "desc" },
+    ...(typeof limite === "number" ? { take: limite } : {}),
   });
 }
 
@@ -74,7 +76,10 @@ export async function recupererRecettes(
   }: { rafraichir?: boolean; maintenant?: Date } = {},
 ): Promise<RecetteBrute[]> {
   if (!rafraichir) {
-    const frais = await lireCache(db, source.nom, { maintenant });
+    const frais = await lireCache(db, source.nom, {
+      maintenant,
+      limite: criteres.limite,
+    });
     if (frais.length > 0) return frais;
   }
 
@@ -83,10 +88,12 @@ export async function recupererRecettes(
     await ecrireCache(db, recettes, { maintenant });
     return recettes;
   } catch (erreur) {
-    // La source a cassé : on resert le cache (même périmé) s'il existe.
+    // La source a cassé : on resert le cache (même périmé) s'il existe, borné.
     const repli = await db.recetteCache.findMany({
       where: { source: source.nom },
       select: { source: true, sourceRef: true, titre: true, ingredientsTexte: true },
+      orderBy: { fetchedAt: "desc" },
+      ...(typeof criteres.limite === "number" ? { take: criteres.limite } : {}),
     });
     if (repli.length > 0) return repli;
     throw erreur;

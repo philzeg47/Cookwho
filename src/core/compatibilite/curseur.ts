@@ -4,8 +4,12 @@
 
 import { contientTokens, tokeniser } from "../texte";
 
-/** Borne haute du seuil (cohérente avec la borne serveur Zod, story 4.1b). */
-export const SEUIL_TOLERANCE_MAX = 5;
+/**
+ * Borne haute du seuil = dernier index des libellés de tolérance (0-4),
+ * cohérente avec l'échelle UI/Zod (`TOLERANCE_LABELS.length - 1`, patch 4.1b).
+ * Ainsi « Souple » (4) → poids 0 (aucune pénalité), « Strict » (0) → poids max.
+ */
+export const SEUIL_TOLERANCE_MAX = 4;
 
 export type NonAime = { valeur: string; seuilTolerance: number };
 

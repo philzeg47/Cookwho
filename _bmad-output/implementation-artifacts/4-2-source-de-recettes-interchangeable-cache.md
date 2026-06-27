@@ -4,7 +4,7 @@ baseline_commit: 9715a82
 
 # Story 4.2 : Source de recettes interchangeable + cache
 
-Status: review
+Status: done
 
 ## Story
 
