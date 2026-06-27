@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-06-19
-last_updated: 2026-06-27  # story 4.2 → review (source recettes + cache)
+last_updated: 2026-06-27  # story 4.3 → review (mur opérationnel)
 project: CookWho
 project_key: NOKEY
 tracking_system: file-system
@@ -78,7 +78,10 @@ development_status:
   4-1a-normalize-ingredients: done
   4-1b-detection-allergenes-corpus: done
   4-2-source-de-recettes-interchangeable-cache: review
-  4-3-filtre-du-mur: backlog
+  4-3-filtre-du-mur: review
+  # 4.3 = mur allergènes + régimes-allergènes (gluten/lait). Régimes alimentaires
+  # (végétarien/vegan/halal/casher/porc) différés : exigent un dico ingrédient→propriété.
+  4-3b-regimes-alimentaires: backlog
   4-4-generer-recettes-compatibles-regenerer: backlog
   4-5-degradation-elegante: backlog
   4-6-echec-explicatif: backlog

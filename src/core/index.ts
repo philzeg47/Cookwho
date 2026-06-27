@@ -1,6 +1,6 @@
 // Noyau de domaine PUR de CookWho (zéro I/O).
-// allergenes/ : taxonomie + dictionnaire (4.0). normalize/detect arrivent en 4.1.
-// compatibilite/ : mur/curseur/resoudre arriveront plus loin dans l'Epic 4.
+// allergenes/ : taxonomie + dictionnaire + normalize + detect (4.0/4.1).
+// compatibilite/ : mur (4.3). curseur/resoudre arrivent en 4.4+.
 export const CORE_PLACEHOLDER = "cookwho-core" as const;
 
 export type {
@@ -15,3 +15,6 @@ export {
   normalize,
   detect,
 } from "./allergenes";
+
+export type { Contraintes, RaisonExclusion, VerdictMur } from "./compatibilite";
+export { construireContraintes, mur } from "./compatibilite";
