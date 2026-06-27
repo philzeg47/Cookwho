@@ -9,9 +9,9 @@
 // une sous-séquence CONTIGUË des tokens de l'ingrédient. Tolérance pluriel
 // limitée (suffixe `s`/`x`), côté sur-détection (sûr).
 
+import { contientTokens, tokeniser } from "../texte";
 import { ALLERGENES_UE_CODES, type AllergeneUE } from "./allergenes-ue";
 import { DICTIONNAIRE_ALLERGENES } from "./dictionnaire";
-import { normalize } from "./normalize";
 
 export type ResultatDetection = {
   allergenes: AllergeneUE[];
@@ -21,49 +21,19 @@ export type ResultatDetection = {
 /** Index précalculé (pur) : tokens de clé normalisés (les deux côtés normalisés). */
 const INDEX: ReadonlyArray<{ tokens: string[]; allergenes: AllergeneUE[] }> =
   DICTIONNAIRE_ALLERGENES.map((entree) => ({
-    tokens: normalize(entree.ingredient).split(" ").filter(Boolean),
+    tokens: tokeniser(entree.ingredient),
     allergenes: entree.allergenes,
   }));
-
-/** Retire un éventuel suffixe pluriel `s`/`x` (réduction simple, conservatrice). */
-function racine(mot: string): string {
-  return mot.replace(/[sx]$/, "");
-}
-
-/**
- * Un token d'ingrédient correspond-il au token de clé ? Tolérance pluriel
- * BIDIRECTIONNELLE (suffixe `s`/`x` des deux côtés) : « sulfite » matche la clé
- * « sulfites » et inversement. Sens conservateur (sur-détection = sûr).
- */
-function tokenCorrespond(token: string, cle: string): boolean {
-  return token === cle || racine(token) === racine(cle);
-}
-
-/** Les `cleTokens` forment-ils une sous-séquence contiguë de `tokens` ? */
-function contientSequence(tokens: string[], cleTokens: string[]): boolean {
-  if (cleTokens.length === 0 || cleTokens.length > tokens.length) return false;
-  for (let i = 0; i <= tokens.length - cleTokens.length; i++) {
-    let ok = true;
-    for (let j = 0; j < cleTokens.length; j++) {
-      if (!tokenCorrespond(tokens[i + j]!, cleTokens[j]!)) {
-        ok = false;
-        break;
-      }
-    }
-    if (ok) return true;
-  }
-  return false;
-}
 
 export function detect(ingredients: string[]): ResultatDetection {
   const trouves = new Set<AllergeneUE>();
   const ingredientsNonReconnus: string[] = [];
 
   for (const ligne of ingredients) {
-    const tokens = normalize(ligne).split(" ").filter(Boolean);
+    const tokens = tokeniser(ligne);
     let reconnu = false;
     for (const entree of INDEX) {
-      if (contientSequence(tokens, entree.tokens)) {
+      if (contientTokens(tokens, entree.tokens)) {
         for (const a of entree.allergenes) trouves.add(a);
         reconnu = true;
       }

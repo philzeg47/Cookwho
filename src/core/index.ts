@@ -16,5 +16,21 @@ export {
   detect,
 } from "./allergenes";
 
-export type { Contraintes, RaisonExclusion, VerdictMur } from "./compatibilite";
-export { construireContraintes, mur } from "./compatibilite";
+export type {
+  Contraintes,
+  RaisonExclusion,
+  VerdictMur,
+  NonAime,
+  OptionsResolution,
+  RecetteEntree,
+  RecetteRetenue,
+  ResultatResolution,
+} from "./compatibilite";
+export {
+  construireContraintes,
+  mur,
+  curseur,
+  SEUIL_TOLERANCE_MAX,
+  resoudre,
+} from "./compatibilite";
+export { tokeniser, contientTokens } from "./texte";

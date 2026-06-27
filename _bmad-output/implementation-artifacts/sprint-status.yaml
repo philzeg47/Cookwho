@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-06-19
-last_updated: 2026-06-27  # story 4.3 → review (mur opérationnel)
+last_updated: 2026-06-27  # story 4.4a → review (curseur + resoudre)
 project: CookWho
 project_key: NOKEY
 tracking_system: file-system
@@ -82,7 +82,9 @@ development_status:
   # 4.3 = mur allergènes + régimes-allergènes (gluten/lait). Régimes alimentaires
   # (végétarien/vegan/halal/casher/porc) différés : exigent un dico ingrédient→propriété.
   4-3b-regimes-alimentaires: backlog
-  4-4-generer-recettes-compatibles-regenerer: backlog
+  # 4.4 découpée : 4.4a /core (curseur + resoudre, chemin nominal) + 4.4b serveur (génération tRPC + régénérer)
+  4-4a-curseur-resoudre: review
+  4-4b-generation-serveur: backlog
   4-5-degradation-elegante: backlog
   4-6-echec-explicatif: backlog
   4-7-generation-forcee: backlog
