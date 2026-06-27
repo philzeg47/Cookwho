@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-06-19
-last_updated: 2026-06-27  # story 4.0 → review
+last_updated: 2026-06-27  # story 4.1a → review
 project: CookWho
 project_key: NOKEY
 tracking_system: file-system
@@ -74,7 +74,9 @@ development_status:
   # Epic 4 : Moteur de sécurité & compatibilité
   epic-4: in-progress
   4-0-dictionnaire-ingredient-allergene: review
-  4-1-detection-des-allergenes-interne: backlog
+  # 4.1 découpée (story dense) : 4.1a normalize (pur) + 4.1b detect & corpus d'or + gate CI
+  4-1a-normalize-ingredients: review
+  4-1b-detection-allergenes-corpus: backlog
   4-2-source-de-recettes-interchangeable-cache: backlog
   4-3-filtre-du-mur: backlog
   4-4-generer-recettes-compatibles-regenerer: backlog

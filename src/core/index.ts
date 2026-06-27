@@ -8,4 +8,5 @@ export {
   ALLERGENES_UE_CODES,
   LIBELLES_ALLERGENES,
   DICTIONNAIRE_ALLERGENES,
+  normalize,
 } from "./allergenes";
