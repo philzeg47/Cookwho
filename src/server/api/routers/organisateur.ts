@@ -7,6 +7,8 @@ import { computeExpiresAt } from "~/lib/repas";
 import { genererAccessToken } from "~/lib/tokens";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { envoyerEmail } from "~/server/email";
+import { type DbGeneration, genererPourRepas } from "~/server/generation";
+import { marmitonSource } from "~/server/sources/marmitonSource";
 
 /** Plafond de participants par repas (garde-fou anti-abus — V1). */
 const MAX_PARTICIPANTS_PAR_REPAS = 50;
@@ -138,5 +140,27 @@ export const organisateurRouter = createTRPCRouter({
       });
 
       return { ok: true };
+    }),
+
+  /**
+   * Génère 3-10 recettes compatibles (mur + curseur) pour un repas possédé.
+   * Vue réservée à l'organisateur (NFR5). La logique vit dans `generation.ts`
+   * + `/core` ; ce router ne fait que la frontière de sécurité + délégation.
+   */
+  genererRecettes: protectedProcedure
+    .input(
+      z.object({
+        repasId: z.string(),
+        exclure: z.array(z.string()).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Cast de frontière : le client Prisma fournit ces méthodes à l'exécution ;
+      // TS ne peut pas prouver l'assignabilité structurelle (méthodes génériques).
+      return genererPourRepas(ctx.db as unknown as DbGeneration, marmitonSource, {
+        repasId: input.repasId,
+        organisateurId: ctx.session.user.id,
+        exclure: input.exclure,
+      });
     }),
 });

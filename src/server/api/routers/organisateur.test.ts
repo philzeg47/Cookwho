@@ -14,6 +14,10 @@ vi.mock("~/env", () => ({
   },
 }));
 vi.mock("~/server/email", () => ({ envoyerEmail: vi.fn() }));
+// Génération : neutraliser le scraper (sinon l'import charge marmiton-api/réseau).
+vi.mock("~/server/sources/marmitonSource", () => ({
+  marmitonSource: { nom: "marmiton", chercher: vi.fn(async () => []) },
+}));
 
 import { appRouter } from "~/server/api/root";
 import { envoyerEmail } from "~/server/email";
@@ -262,5 +266,46 @@ describe("organisateurRouter — envoyerInvitation", () => {
     const html = vi.mocked(envoyerEmail).mock.calls[0]![0].html;
     expect(html).not.toContain("<img");
     expect(html).toContain("&lt;img");
+  });
+});
+
+describe("organisateurRouter — genererRecettes", () => {
+  it("refuse un repas non possédé (NOT_FOUND)", async () => {
+    const db = {
+      repas: { findFirst: vi.fn().mockResolvedValue(null) },
+      recetteCache: { findMany: vi.fn(), upsert: vi.fn() },
+    };
+    await expect(
+      caller({ user: { id: "orga-1" } }, db).organisateur.genererRecettes({
+        repasId: "repas-autrui",
+      }),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+  });
+
+  it("génère 3-10 recettes pour un repas possédé (cache servi, sans réseau)", async () => {
+    const findFirst = vi.fn().mockResolvedValue({
+      participants: [{ statut: "REPONDU", restrictions: [] }],
+    });
+    // Cache frais → recupererRecettes resert le cache (la source n'est pas appelée).
+    const recettesCache = Array.from({ length: 4 }, (_, i) => ({
+      source: "marmiton",
+      sourceRef: `u${i}`,
+      titre: `Plat ${i}`,
+      ingredientsTexte: ["tomate", "basilic"],
+    }));
+    const db = {
+      repas: { findFirst },
+      recetteCache: { findMany: vi.fn().mockResolvedValue(recettesCache), upsert: vi.fn() },
+    };
+
+    const res = await caller({ user: { id: "orga-1" } }, db).organisateur.genererRecettes({
+      repasId: "repas-1",
+    });
+
+    expect(findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: "repas-1", organisateurId: "orga-1" } }),
+    );
+    expect(res.ok).toBe(true);
+    if (res.ok) expect(res.recettes.length).toBeGreaterThanOrEqual(3);
   });
 });
