@@ -3,10 +3,15 @@
 // compatibilite/ : mur/curseur/resoudre arriveront plus loin dans l'Epic 4.
 export const CORE_PLACEHOLDER = "cookwho-core" as const;
 
-export type { AllergeneUE, EntreeDictionnaire } from "./allergenes";
+export type {
+  AllergeneUE,
+  EntreeDictionnaire,
+  ResultatDetection,
+} from "./allergenes";
 export {
   ALLERGENES_UE_CODES,
   LIBELLES_ALLERGENES,
   DICTIONNAIRE_ALLERGENES,
   normalize,
+  detect,
 } from "./allergenes";

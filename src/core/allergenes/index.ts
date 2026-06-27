@@ -8,3 +8,5 @@ export {
 export type { EntreeDictionnaire } from "./dictionnaire";
 export { DICTIONNAIRE_ALLERGENES } from "./dictionnaire";
 export { normalize } from "./normalize";
+export type { ResultatDetection } from "./detect";
+export { detect } from "./detect";
