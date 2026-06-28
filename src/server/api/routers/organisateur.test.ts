@@ -284,7 +284,7 @@ describe("organisateurRouter — genererRecettes", () => {
 
   it("génère 3-10 recettes pour un repas possédé (cache servi, sans réseau)", async () => {
     const findFirst = vi.fn().mockResolvedValue({
-      participants: [{ statut: "REPONDU", restrictions: [] }],
+      participants: [{ prenom: "Léa", statut: "REPONDU", restrictions: [] }],
     });
     // Cache frais → recupererRecettes resert le cache (la source n'est pas appelée).
     const recettesCache = Array.from({ length: 4 }, (_, i) => ({
@@ -305,7 +305,57 @@ describe("organisateurRouter — genererRecettes", () => {
     expect(findFirst).toHaveBeenCalledWith(
       expect.objectContaining({ where: { id: "repas-1", organisateurId: "orga-1" } }),
     );
-    expect(res.ok).toBe(true);
-    if (res.ok) expect(res.recettes.length).toBeGreaterThanOrEqual(3);
+    expect(res.statut).toBe("GENERE");
+    if (res.statut === "GENERE") {
+      expect(res.force).toBe(false);
+      expect(res.resolution.ok).toBe(true);
+      if (res.resolution.ok) expect(res.resolution.recettes.length).toBeGreaterThanOrEqual(3);
+    }
+  });
+
+  it("forcer:true génère malgré un participant EN_ATTENTE et le nomme", async () => {
+    const findFirst = vi.fn().mockResolvedValue({
+      participants: [
+        { prenom: "Léa", statut: "REPONDU", restrictions: [] },
+        { prenom: "Paul", statut: "EN_ATTENTE", restrictions: [] },
+      ],
+    });
+    const recettesCache = Array.from({ length: 4 }, (_, i) => ({
+      source: "marmiton",
+      sourceRef: `u${i}`,
+      titre: `Plat ${i}`,
+      ingredientsTexte: ["tomate", "basilic"],
+    }));
+    const db = {
+      repas: { findFirst },
+      recetteCache: { findMany: vi.fn().mockResolvedValue(recettesCache), upsert: vi.fn() },
+    };
+
+    const res = await caller({ user: { id: "orga-1" } }, db).organisateur.genererRecettes({
+      repasId: "repas-1",
+      forcer: true,
+    });
+
+    expect(res.statut).toBe("GENERE");
+    if (res.statut === "GENERE") {
+      expect(res.force).toBe(true);
+      expect(res.nonCouverts).toEqual(["Paul"]);
+    }
+  });
+
+  it("sans forçage, un participant EN_ATTENTE bloque la génération (ATTENTE_REPONSES)", async () => {
+    const findFirst = vi.fn().mockResolvedValue({
+      participants: [{ prenom: "Paul", statut: "EN_ATTENTE", restrictions: [] }],
+    });
+    const findMany = vi.fn().mockResolvedValue([]);
+    const db = { repas: { findFirst }, recetteCache: { findMany, upsert: vi.fn() } };
+
+    const res = await caller({ user: { id: "orga-1" } }, db).organisateur.genererRecettes({
+      repasId: "repas-1",
+    });
+
+    expect(res.statut).toBe("ATTENTE_REPONSES");
+    if (res.statut === "ATTENTE_REPONSES") expect(res.nonCouverts).toEqual(["Paul"]);
+    expect(findMany).not.toHaveBeenCalled(); // court-circuit avant la source/cache
   });
 });

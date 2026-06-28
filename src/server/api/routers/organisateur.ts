@@ -152,6 +152,7 @@ export const organisateurRouter = createTRPCRouter({
       z.object({
         repasId: z.string(),
         exclure: z.array(z.string()).max(200).optional(),
+        forcer: z.boolean().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -161,6 +162,7 @@ export const organisateurRouter = createTRPCRouter({
         repasId: input.repasId,
         organisateurId: ctx.session.user.id,
         exclure: input.exclure,
+        forcer: input.forcer,
       });
     }),
 });
