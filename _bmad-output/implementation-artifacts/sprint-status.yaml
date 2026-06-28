@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-06-19
-last_updated: 2026-06-28  # story 4.7 génération forcée → review
+last_updated: 2026-06-28  # revue lot 4.5→4.7 → done (3 patches)
 project: CookWho
 project_key: NOKEY
 tracking_system: file-system
@@ -85,9 +85,9 @@ development_status:
   # 4.4 découpée : 4.4a /core (curseur + resoudre, chemin nominal) + 4.4b serveur (génération tRPC + régénérer)
   4-4a-curseur-resoudre: done
   4-4b-generation-serveur: done
-  4-5-degradation-elegante: review
-  4-6-echec-explicatif: review
-  4-7-generation-forcee: review
+  4-5-degradation-elegante: done
+  4-6-echec-explicatif: done
+  4-7-generation-forcee: done
   epic-4-retrospective: optional
 
   # Epic 5 : Présentation & choix du plat

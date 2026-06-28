@@ -4,7 +4,7 @@ baseline_commit: 280a2b1371edee19111c37249b9f25771a589bd6
 
 # Story 4.6 : Échec explicatif (mur impossible)
 
-Status: review
+Status: done
 
 ## Story
 

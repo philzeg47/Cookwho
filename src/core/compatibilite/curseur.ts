@@ -22,6 +22,10 @@ function poids(seuilTolerance: number): number {
  * Pénalité d'une recette pour les goûts du groupe : somme des poids des
  * non-aimés PRÉSENTS dans la recette. Un non-aimé absent n'ajoute rien.
  * Déterministe.
+ *
+ * NB : les non-aimés dupliqués (ex. 2 répondants détestant « Olives ») sont
+ * CUMULÉS à dessein — un aliment rejeté par plus de monde descend plus bas
+ * dans le classement. (Cf. `genants`, qui lui DÉDOUBLONNE pour l'affichage.)
  */
 export function curseur(ingredients: string[], nonAimes: NonAime[]): number {
   const lignesTokenisees = ingredients.map((ligne) => tokeniser(ligne));
@@ -44,6 +48,9 @@ export function curseur(ingredients: string[], nonAimes: NonAime[]): number {
  * d'origine), pour signaler les « ingrédients gênants » en dégradation (4.5).
  * Même mécanique de match que `curseur` (par ligne, tokens). Dédupliqué par
  * valeur, ordre stable (premier d'apparition dans `nonAimes`). Déterministe.
+ *
+ * Le dédoublonnage est volontaire (≠ `curseur` qui cumule) : on affiche un
+ * ingrédient gênant une seule fois, même si plusieurs convives le rejettent.
  */
 export function genants(ingredients: string[], nonAimes: NonAime[]): string[] {
   const lignesTokenisees = ingredients.map((ligne) => tokeniser(ligne));

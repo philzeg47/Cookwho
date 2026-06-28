@@ -70,6 +70,9 @@ export function resoudre(
   nonAimes: NonAime[],
   { exclure = [], min = 3, max = 10 }: OptionsResolution = {},
 ): ResultatResolution {
+  // Garde-fou : `max` ne peut pas être sous `min` (sinon `ok:true` renverrait
+  // moins de `min` recettes, contredisant le contrat).
+  const plafond = Math.max(min, max);
   const exclus = new Set(exclure);
 
   // Diagnostic d'échec (4.6) : par code, type (provenance) + nb de recettes
@@ -138,8 +141,8 @@ export function resoudre(
   // Succès plein si ≥ min recettes plaisent à tout le groupe (pénalité 0)…
   const zeroPenalite = compatibles.filter((r) => r.penalite === 0);
   if (zeroPenalite.length >= min) {
-    return { ok: true, mode: "TOUS_CONTENTS", recettes: zeroPenalite.slice(0, max) };
+    return { ok: true, mode: "TOUS_CONTENTS", recettes: zeroPenalite.slice(0, plafond) };
   }
   // … sinon dégradation : les moins pénalisées (le mur reste garanti).
-  return { ok: true, mode: "DEGRADATION", recettes: compatibles.slice(0, max) };
+  return { ok: true, mode: "DEGRADATION", recettes: compatibles.slice(0, plafond) };
 }

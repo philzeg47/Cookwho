@@ -161,4 +161,18 @@ describe("genererPourRepas — génération forcée (4.7)", () => {
       }
     }
   });
+
+  it("forcer:true avec TOUS en attente → génère sans contrainte et avertit tout le monde", async () => {
+    // Aucun REPONDU → aucune contrainte déclarée. L'avertissement (force:true +
+    // nonCouverts) garantit que l'UI signale que personne n'est couvert.
+    const m = dbMock([enAttente("Paul"), enAttente("Max")]);
+    const recettes = Array.from({ length: 4 }, (_, i) => recetteBrute(`r${i}`, ["tomate"]));
+    const res = await genererPourRepas(m.db, sourceFactice(recettes), { ...OPTS, forcer: true });
+    expect(res.statut).toBe("GENERE");
+    if (res.statut === "GENERE") {
+      expect(res.force).toBe(true);
+      expect(res.nonCouverts).toEqual(["Paul", "Max"]);
+      expect(res.resolution.ok).toBe(true);
+    }
+  });
 });

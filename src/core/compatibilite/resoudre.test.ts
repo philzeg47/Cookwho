@@ -23,6 +23,13 @@ describe("resoudre — chemin nominal", () => {
     }
   });
 
+  it("clamp `max` sous `min` : `ok:true` renvoie au moins `min` recettes", () => {
+    const recettes = Array.from({ length: 5 }, (_, i) => recette(`r${i}`));
+    const res = resoudre(recettes, sansContrainte, [], { min: 3, max: 1 });
+    expect(res.ok).toBe(true);
+    if (res.ok) expect(res.recettes.length).toBe(3);
+  });
+
   it("renvoie PAS_ASSEZ quand < 3 compatibles (pool trop petit → aucune contrainte bloquante)", () => {
     const res = resoudre([recette("r0"), recette("r1")], sansContrainte, []);
     expect(res).toEqual({

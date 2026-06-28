@@ -8,7 +8,7 @@ As an organisateur,
 I want générer avant que tous aient répondu,
 so that je ne suis pas bloqué par un retardataire. (FR12)
 
-Status: review
+Status: done
 
 ## Acceptance Criteria
 
@@ -53,6 +53,17 @@ Status: review
 
 - [x] **Tâche 6 — Validations** (AC: 7)
   - [x] `npm run test`, `lint`, `typecheck`, `SKIP_ENV_VALIDATION=1 build` → tout vert.
+
+### Review Findings
+
+> Revue de code adversariale du 2026-06-28 (3 couches), **lot 4.5 → 4.7**, diff depuis `280a2b1`. Verdict : **lot très propre**, invariant de sécurité confirmé dans les **3 modes** (sûr/dégradé/forcé), **21/21 ACs** satisfaits, pureté `/core` + NFR5 OK. **0 High.** 2 patches mineurs · 1 clarification · 3 reports.
+
+- [x] [Review][Patch] **[Low/clarification]** Asymétrie `curseur` vs `genants` sur non-aimés **dupliqués** : `curseur` cumule (×2, agrège le déplaisir du groupe), `genants` dédoublonne (×1, affichage). Intentionnel → **documenté** dans `curseur.ts`. [src/core/compatibilite/curseur.ts]
+- [x] [Review][Patch] **[Low]** Garde défensive `resoudre` : clamp `plafond = Math.max(min, max)` → `ok:true` renvoie toujours ≥ `min` recettes. + test. [src/core/compatibilite/resoudre.ts]
+- [x] [Review][Patch] **[Low]** Test « **tous EN_ATTENTE + forcer** » ajouté → `GENERE`/`force: true`/`nonCouverts` = tout le monde (l'UI avertit sur ce bord). [src/server/generation.test.ts]
+- [x] [Review][Defer→Epic 5] **[Low]** Prénoms **dupliqués** dans `nonCouverts` (2 « Paul ») non dédoublonnés — correct au fond (2 vraies personnes) ; l'affichage/désambiguïsation relève d'Epic 5.
+- [x] [Review][Defer→Epic 5] **[Low]** Repas à **zéro participant** → génère avec contraintes vides, `force:false`, sans signal. Inoffensif (personne à protéger) ; décider si l'UI doit empêcher la génération d'un groupe vide → Epic 5.
+- [x] [Review][Dismiss] Provenance d'un même code via ALLERGIE **et** REGIME → une seule entrée, type du premier `raison` rencontré ; `mur` met ALLERGIE (plus sévère) quand applicable. Ambiguïté inhérente, défaut sûr.
 
 ## Dev Notes
 
