@@ -8,6 +8,7 @@ import { Button } from "~/components/ui/Button";
 import { RecipeCard } from "~/components/ui/RecipeCard";
 import { SafeBadge } from "~/components/ui/SafeBadge";
 import { api } from "~/trpc/react";
+import { EtatGenerationEnCours } from "./EtatGenerationEnCours";
 
 /**
  * Section « Recettes » du détail repas (story 5.1). Réservée organisateur
@@ -26,20 +27,31 @@ export function RecettesSection({
   const generer = api.organisateur.genererRecettes.useMutation();
   const retenir = api.organisateur.retenirPlat.useMutation();
   const [retenuRef, setRetenuRef] = useState<string | null>(platRetenuRef ?? null);
+  // Plat en attente de confirmation (human-in-the-loop allergie, 5.3).
+  const [aValider, setAValider] = useState<{ ref: string; titre: string } | null>(null);
 
-  function choisir(ref: string, titre: string) {
+  const resultat = generer.data;
+  const prenomsAllergie =
+    resultat?.statut === "GENERE" ? resultat.prenomsAvecAllergie : [];
+
+  function retenirPlat(ref: string, titre: string) {
     retenir.mutate(
       { repasId, ref, titre },
       {
         onSuccess: () => {
           setRetenuRef(ref);
+          setAValider(null);
           router.refresh(); // rafraîchit le Server Component (« Menu retenu »)
         },
       },
     );
   }
 
-  const resultat = generer.data;
+  function choisir(ref: string, titre: string) {
+    // Allergie dans le groupe → confirmation explicite obligatoire (FR16).
+    if (prenomsAllergie.length > 0) setAValider({ ref, titre });
+    else retenirPlat(ref, titre); // pas d'allergie → retient directement (5.1)
+  }
 
   return (
     <section className="flex flex-col gap-4">
@@ -65,7 +77,31 @@ export function RecettesSection({
         </p>
       ) : null}
 
-      {/* TODO 5.4 : état d'attente habillé et narratif. */}
+      {aValider ? (
+        <Banner variant="danger">
+          <span>
+            {prenomsAllergie.join(", ")} {prenomsAllergie.length > 1 ? "ont" : "a"}{" "}
+            déclaré une allergie. Notre détection a déjà écarté les plats à risque
+            connus, mais <strong>vérifie les ingrédients</strong> de «&nbsp;
+            {aValider.titre}&nbsp;» avant de valider.
+            <span className="mt-2 flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant="primary"
+                disabled={retenir.isPending}
+                onClick={() => retenirPlat(aValider.ref, aValider.titre)}
+              >
+                Valider ce plat
+              </Button>
+              <Button type="button" variant="secondary" onClick={() => setAValider(null)}>
+                Annuler
+              </Button>
+            </span>
+          </span>
+        </Banner>
+      ) : null}
+
+      {generer.isPending ? <EtatGenerationEnCours /> : null}
 
       {resultat?.statut === "ATTENTE_REPONSES" ? (
         <p className="text-ink-soft text-sm">

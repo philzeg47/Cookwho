@@ -1,11 +1,12 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { retenirMutate, genererData } = vi.hoisted(() => ({
+const { retenirMutate, genererData, genererState } = vi.hoisted(() => ({
   retenirMutate: vi.fn(),
   genererData: {
     value: undefined as unknown,
   },
+  genererState: { isPending: false },
 }));
 
 vi.mock("next/navigation", () => ({
@@ -18,7 +19,7 @@ vi.mock("~/trpc/react", () => ({
       genererRecettes: {
         useMutation: () => ({
           mutate: vi.fn(),
-          isPending: false,
+          isPending: genererState.isPending,
           isError: false,
           data: genererData.value,
         }),
@@ -29,6 +30,11 @@ vi.mock("~/trpc/react", () => ({
     },
   },
 }));
+
+beforeEach(() => {
+  genererState.isPending = false;
+  genererData.value = undefined;
+});
 
 import { RecettesSection } from "./RecettesSection";
 
@@ -45,12 +51,35 @@ function recette(ref: string, titre: string) {
 }
 
 describe("RecettesSection", () => {
+  it("affiche l'état d'attente habillé pendant la génération (5.4)", () => {
+    genererState.isPending = true;
+    genererData.value = undefined;
+    render(<RecettesSection repasId="r1" />);
+    expect(screen.getByRole("status")).toHaveTextContent(/On vérifie chaque assiette/);
+  });
+
+  it("masque l'état d'attente une fois la génération résolue (5.4)", () => {
+    genererState.isPending = false;
+    genererData.value = {
+      statut: "GENERE",
+      force: false,
+      nonCouverts: [],
+      genantsParConvive: {},
+      prenomsAvecAllergie: [],
+      resolution: { ok: true, mode: "TOUS_CONTENTS", recettes: [recette("u1", "Tajine"), recette("u2", "Riz"), recette("u3", "Curry")] },
+    };
+    render(<RecettesSection repasId="r1" />);
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Tajine" })).toBeInTheDocument();
+  });
+
   it("affiche la liste et le badge « X plats compatibles » sur un succès plein", () => {
     genererData.value = {
       statut: "GENERE",
       force: false,
       nonCouverts: [],
       genantsParConvive: {},
+      prenomsAvecAllergie: [],
       resolution: {
         ok: true,
         mode: "TOUS_CONTENTS",
@@ -69,6 +98,7 @@ describe("RecettesSection", () => {
       force: false,
       nonCouverts: [],
       genantsParConvive: {},
+      prenomsAvecAllergie: [],
       resolution: { ok: true, mode: "TOUS_CONTENTS", recettes: [recette("u1", "Tajine")] },
     };
     retenirMutate.mockClear();
@@ -84,10 +114,48 @@ describe("RecettesSection", () => {
       force: false,
       nonCouverts: [],
       genantsParConvive: {},
+      prenomsAvecAllergie: [],
       resolution: { ok: true, mode: "TOUS_CONTENTS", recettes: [recette("u1", "Tajine")] },
     };
     render(<RecettesSection repasId="r1" platRetenuRef="u1" />);
     expect(screen.getByText(/Plat retenu/)).toBeInTheDocument();
+  });
+
+  it("avec allergie : « Choisir » N'appelle PAS retenirPlat, l'avertissement nomme le convive, « Valider » retient (5.3)", () => {
+    genererData.value = {
+      statut: "GENERE",
+      force: false,
+      nonCouverts: [],
+      genantsParConvive: {},
+      prenomsAvecAllergie: ["Léa"],
+      resolution: { ok: true, mode: "TOUS_CONTENTS", recettes: [recette("u1", "Tajine")] },
+    };
+    retenirMutate.mockClear();
+    render(<RecettesSection repasId="r1" />);
+    fireEvent.click(screen.getByRole("button", { name: /choisir ce plat/i }));
+    // Human-in-the-loop : pas de persistance sans confirmation.
+    expect(retenirMutate).not.toHaveBeenCalled();
+    expect(screen.getByRole("alert")).toHaveTextContent(/Léa a déclaré une allergie/);
+    fireEvent.click(screen.getByRole("button", { name: /valider ce plat/i }));
+    expect(retenirMutate).toHaveBeenCalledTimes(1);
+    expect(retenirMutate.mock.calls[0]![0]).toEqual({ repasId: "r1", ref: "u1", titre: "Tajine" });
+  });
+
+  it("« Annuler » referme l'avertissement sans retenir (5.3)", () => {
+    genererData.value = {
+      statut: "GENERE",
+      force: false,
+      nonCouverts: [],
+      genantsParConvive: {},
+      prenomsAvecAllergie: ["Léa"],
+      resolution: { ok: true, mode: "TOUS_CONTENTS", recettes: [recette("u1", "Tajine")] },
+    };
+    retenirMutate.mockClear();
+    render(<RecettesSection repasId="r1" />);
+    fireEvent.click(screen.getByRole("button", { name: /choisir ce plat/i }));
+    fireEvent.click(screen.getByRole("button", { name: /annuler/i }));
+    expect(retenirMutate).not.toHaveBeenCalled();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
   it("en dégradation : message d'explication + ingrédient gênant attribué (5.2)", () => {
@@ -96,6 +164,7 @@ describe("RecettesSection", () => {
       force: false,
       nonCouverts: [],
       genantsParConvive: { Champignons: ["Paul"] },
+      prenomsAvecAllergie: [],
       resolution: {
         ok: true,
         mode: "DEGRADATION",
