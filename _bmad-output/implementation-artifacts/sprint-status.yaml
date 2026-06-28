@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-06-19
-last_updated: 2026-06-28  # story 5.4 état de génération → review (MVP fonctionnel complet)
+last_updated: 2026-06-28  # revue lot Epic 5 → done — MVP COMPLET (3 patches)
 project: CookWho
 project_key: NOKEY
 tracking_system: file-system
@@ -91,9 +91,9 @@ development_status:
   epic-4-retrospective: optional
 
   # Epic 5 : Présentation & choix du plat
-  epic-5: in-progress
-  5-1-consulter-la-liste-choisir-un-plat: review
-  5-2-signalement-des-ingredients-genants: review
-  5-3-avertissement-allergie-validation: review
-  5-4-etat-de-generation-en-cours: review
+  epic-5: done
+  5-1-consulter-la-liste-choisir-un-plat: done
+  5-2-signalement-des-ingredients-genants: done
+  5-3-avertissement-allergie-validation: done
+  5-4-etat-de-generation-en-cours: done
   epic-5-retrospective: optional

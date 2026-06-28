@@ -141,6 +141,19 @@ describe("genererPourRepas", () => {
     }
   });
 
+  it("déduplique les prénoms homonymes (genantsParConvive / prenomsAvecAllergie)", async () => {
+    const m = dbMock([
+      { prenom: "Paul", statut: "REPONDU", restrictions: [{ type: "ALLERGIE", valeur: "Arachides", seuilTolerance: null }, { type: "NON_AIME", valeur: "Olives", seuilTolerance: 0 }] },
+      { prenom: "Paul", statut: "REPONDU", restrictions: [{ type: "ALLERGIE", valeur: "Lait", seuilTolerance: null }, { type: "NON_AIME", valeur: "Olives", seuilTolerance: 1 }] },
+    ]);
+    const recettes = Array.from({ length: 4 }, (_, i) => recetteBrute(`r${i}`, ["tomate"]));
+    const res = await genererPourRepas(m.db, sourceFactice(recettes), OPTS);
+    if (res.statut === "GENERE") {
+      expect(res.prenomsAvecAllergie).toEqual(["Paul"]); // dédupliqué
+      expect(res.genantsParConvive.Olives).toEqual(["Paul"]); // dédupliqué
+    }
+  });
+
   it("prenomsAvecAllergie vide quand aucune allergie déclarée", async () => {
     const m = dbMock([repondu("Léa")]);
     const recettes = Array.from({ length: 4 }, (_, i) => recetteBrute(`r${i}`, ["tomate"]));

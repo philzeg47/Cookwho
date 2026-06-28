@@ -138,18 +138,21 @@ export async function genererPourRepas(
   // Attribution « qui est gêné » (5.2) : non-aimé (valeur) → prénoms des
   // répondants l'ayant déclaré. L'UI résout les `ingredientsGenants` d'une
   // recette via ce mapping. `/core` reste inchangé.
-  const genantsParConvive: Record<string, string[]> = {};
-  // Prénoms des répondants ayant déclaré ≥1 allergie (avertissement FR16, 5.3).
-  const prenomsAvecAllergie: string[] = [];
+  // Prénoms dédupliqués par `Set` (lignes dupliquées ou convives homonymes).
+  const genantsSets: Record<string, Set<string>> = {};
+  const allergieSet = new Set<string>();
   for (const p of repas.participants) {
     if (p.statut !== "REPONDU") continue;
     let aAllergie = false;
     for (const r of p.restrictions) {
-      if (r.type === "NON_AIME") (genantsParConvive[r.valeur] ??= []).push(p.prenom);
+      if (r.type === "NON_AIME") (genantsSets[r.valeur] ??= new Set()).add(p.prenom);
       else if (r.type === "ALLERGIE") aAllergie = true;
     }
-    if (aAllergie) prenomsAvecAllergie.push(p.prenom);
+    if (aAllergie) allergieSet.add(p.prenom);
   }
+  const genantsParConvive: Record<string, string[]> = Object.fromEntries(
+    Object.entries(genantsSets).map(([valeur, set]) => [valeur, [...set]]),
+  );
 
   return {
     statut: "GENERE",
@@ -157,6 +160,6 @@ export async function genererPourRepas(
     nonCouverts,
     resolution,
     genantsParConvive,
-    prenomsAvecAllergie,
+    prenomsAvecAllergie: [...allergieSet],
   };
 }

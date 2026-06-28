@@ -141,6 +141,39 @@ describe("RecettesSection", () => {
     expect(retenirMutate.mock.calls[0]![0]).toEqual({ repasId: "r1", ref: "u1", titre: "Tajine" });
   });
 
+  it("« Régénérer » referme une confirmation allergie périmée sans retenir (patch revue)", () => {
+    genererData.value = {
+      statut: "GENERE",
+      force: false,
+      nonCouverts: [],
+      genantsParConvive: {},
+      prenomsAvecAllergie: ["Léa"],
+      resolution: { ok: true, mode: "TOUS_CONTENTS", recettes: [recette("u1", "Tajine")] },
+    };
+    retenirMutate.mockClear();
+    render(<RecettesSection repasId="r1" />);
+    fireEvent.click(screen.getByRole("button", { name: /choisir ce plat/i }));
+    expect(screen.getByRole("alert")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: /générer|régénérer/i }));
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    expect(retenirMutate).not.toHaveBeenCalled();
+  });
+
+  it("synchronise le surlignage « retenu » sur la prop platRetenuRef (patch revue)", () => {
+    genererData.value = {
+      statut: "GENERE",
+      force: false,
+      nonCouverts: [],
+      genantsParConvive: {},
+      prenomsAvecAllergie: [],
+      resolution: { ok: true, mode: "TOUS_CONTENTS", recettes: [recette("u1", "Tajine")] },
+    };
+    const { rerender } = render(<RecettesSection repasId="r1" />);
+    expect(screen.queryByText(/Plat retenu/)).not.toBeInTheDocument();
+    rerender(<RecettesSection repasId="r1" platRetenuRef="u1" />);
+    expect(screen.getByText(/Plat retenu/)).toBeInTheDocument();
+  });
+
   it("« Annuler » referme l'avertissement sans retenir (5.3)", () => {
     genererData.value = {
       statut: "GENERE",

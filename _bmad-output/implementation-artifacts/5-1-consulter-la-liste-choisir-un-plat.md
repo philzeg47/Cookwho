@@ -8,7 +8,7 @@ As an organisateur,
 I want voir les recettes proposées et en choisir une,
 so that j'arrête mon menu. (FR15, NFR5)
 
-Status: review
+Status: done
 
 ## Acceptance Criteria
 

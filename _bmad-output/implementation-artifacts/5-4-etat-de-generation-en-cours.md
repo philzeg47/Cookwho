@@ -8,7 +8,7 @@ As an organisateur,
 I want un retour rassurant pendant que CookWho cherche des plats,
 so that l'attente ne devient pas de l'angoisse. (UX-DR4)
 
-Status: review
+Status: done
 
 ## Acceptance Criteria
 
@@ -30,6 +30,16 @@ Status: review
 
 - [x] **Tâche 3 — Validations** (AC: 3, 5)
   - [x] `npm run test`, `lint`, `typecheck`, `SKIP_ENV_VALIDATION=1 build` → tout vert.
+
+### Review Findings (lot Epic 5)
+
+> Revue de code adversariale du 2026-06-28 (3 couches), **lot Epic 5 (5.1→5.4)**, diff depuis `main`. Verdict : **27/27 ACs**, **NFR5 étanche + testée**, **gate FR16 implémenté ET testé**, a11y OK (0 violation bloquante). Cluster réel d'état local périmé au « Régénérer ». 3 patches · 2 reports.
+
+- [x] [Review][Patch] **[Med — FR16-adjacent]** `aValider` non réinitialisé au « Régénérer ». **Corrigé** : `regenerer()` fait `setAValider(null)` avant `mutate` (bannière périmée refermée) + test. [src/components/organisateur/RecettesSection.tsx]
+- [x] [Review][Patch] **[Med]** `retenuRef` non re-synchronisé. **Corrigé** : `useEffect` `setRetenuRef(platRetenuRef ?? null)` sur changement de prop + test (rerender). [src/components/organisateur/RecettesSection.tsx]
+- [x] [Review][Patch] **[Low]** Prénoms dupliqués. **Corrigé** : dédup via `Set` (`genantsParConvive` + `prenomsAvecAllergie`) + test homonymes. [src/server/generation.ts]
+- [x] [Review][Defer→post-V1] **[Low]** Prénoms **non uniques** (vrais homonymes) : la désambiguïsation (ex. « Paul B. ») relève d'un choix produit ; déféré (déjà noté en revue 4.7).
+- [x] [Review][Defer→post-V1] **[Low]** `retenirPlat` ne valide pas côté serveur que `ref` provient d'une génération, et le gate FR16 est **côté client** (l'organisateur est le propriétaire authentifié ; ownership empêche toute écriture inter-tenant). Si FR16 doit être opposable serveur, prévoir un jeton de confirmation. Acceptable en V1.
 
 ## Dev Notes
 

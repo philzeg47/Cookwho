@@ -8,7 +8,7 @@ As an organisateur,
 I want être averti et valider quand une allergie est en jeu,
 so that je porte la responsabilité finale en connaissance de cause. (FR16)
 
-Status: review
+Status: done
 
 ## Acceptance Criteria
 

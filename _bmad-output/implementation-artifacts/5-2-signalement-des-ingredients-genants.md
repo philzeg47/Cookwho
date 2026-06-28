@@ -8,7 +8,7 @@ As an organisateur,
 I want voir clairement les ingrédients qui posent problème en dégradation,
 so that je peux décider de substituer. (FR10, présentation)
 
-Status: review
+Status: done
 
 ## Acceptance Criteria
 

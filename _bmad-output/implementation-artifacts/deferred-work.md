@@ -32,6 +32,13 @@
 - **[Low]** Pluriels irréguliers `-al`→`-aux` non transformés par `tokenCorrespond` (aucune clé concernée actuellement ; à couvrir si une clé future l'exige, ex. `corail`/`coraux`).
 - **[Low → post-V1]** Complétude exhaustive du dictionnaire = **curation continue**. Le dictionnaire maison est volontairement non-exhaustif (stories 4.0/4.1b). Piste d'enrichissement tracé hors-ligne via Open Food Facts (architecture, différé).
 
+## Deferred from: code review of Epic 5 (UI organisateur, 5.1→5.4) (2026-06-28)
+
+> Revue combinée. 27/27 ACs, NFR5 étanche + testée, gate FR16 implémenté + testé, a11y OK. 3 patches appliqués (état local périmé au Régénérer + dédup prénoms). Reports ci-dessous = post-V1.
+
+- **[Low → post-V1]** **Prénoms non uniques** : deux convives homonymes affichent le même prénom (« Paul ») dans l'avertissement allergie et les ingrédients gênants. Désambiguïsation (ex. « Paul B. », ou un identifiant) = choix produit (déjà noté en revue 4.7 pour `nonCouverts`).
+- **[Low → post-V1]** **`retenirPlat` : gate FR16 côté client uniquement.** Le serveur persiste un `ref`/`titre` ownership-checkés sans vérifier (a) que le `ref` provient d'une génération, ni (b) qu'une confirmation allergie a eu lieu. Sûr en V1 (l'organisateur est le propriétaire authentifié ; aucune écriture inter-tenant). Si FR16 doit être opposable côté serveur, prévoir un jeton de confirmation + validation d'appartenance du `ref`.
+
 ## Deferred from: story 4.3b (régimes alimentaires) (2026-06-28)
 
 - **[Med → post-V1]** **Halal / Casher par propriétés** : différés (décision produit 2026-06-28). On ne peut pas certifier l'abattage/la préparation depuis une liste d'ingrédients ; seules des violations claires sont détectables (porc, alcool ; crustacés/mollusques pour casher). Restent traités en **incertitude** (« régime non évalué ») par le mur — aucune exclusion ni prétention de conformité. Évolution possible : détecter porc/alcool/fruits de mer pour **exclure le clair** + marquer « incertain » sur la certification. Prérequis : 4.3b (dico propriétés) livré.

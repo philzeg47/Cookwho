@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Banner } from "~/components/ui/Banner";
 import { Button } from "~/components/ui/Button";
@@ -29,6 +29,17 @@ export function RecettesSection({
   const [retenuRef, setRetenuRef] = useState<string | null>(platRetenuRef ?? null);
   // Plat en attente de confirmation (human-in-the-loop allergie, 5.3).
   const [aValider, setAValider] = useState<{ ref: string; titre: string } | null>(null);
+
+  // Re-synchronise le surlignage « retenu » avec la source de vérité serveur
+  // (la prop change après `router.refresh()`), pour éviter une divergence.
+  useEffect(() => {
+    setRetenuRef(platRetenuRef ?? null);
+  }, [platRetenuRef]);
+
+  function regenerer() {
+    setAValider(null); // referme une confirmation périmée avant de relancer
+    generer.mutate({ repasId });
+  }
 
   const resultat = generer.data;
   const prenomsAllergie =
@@ -61,7 +72,7 @@ export function RecettesSection({
         <Button
           type="button"
           disabled={generer.isPending}
-          onClick={() => generer.mutate({ repasId })}
+          onClick={regenerer}
         >
           {generer.isPending
             ? "On cherche des plats…"
