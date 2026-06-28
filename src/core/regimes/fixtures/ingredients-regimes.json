@@ -1,0 +1,77 @@
+[
+  {
+    "ingredients": ["Émincé de bœuf", "Oignons"],
+    "proprietesAttendues": ["VIANDE"],
+    "note": "viande de bœuf"
+  },
+  {
+    "ingredients": ["Blanc de poulet", "Crème fraîche"],
+    "proprietesAttendues": ["VIANDE", "PRODUIT_ANIMAL"],
+    "note": "volaille + crème"
+  },
+  {
+    "ingredients": ["Lardons fumés"],
+    "proprietesAttendues": ["PORC", "VIANDE"],
+    "note": "porc porte aussi VIANDE"
+  },
+  {
+    "ingredients": ["Tranches de jambon"],
+    "proprietesAttendues": ["PORC", "VIANDE"],
+    "note": "jambon = porc + viande"
+  },
+  {
+    "ingredients": ["Chorizo", "Pommes de terre"],
+    "proprietesAttendues": ["PORC", "VIANDE"],
+    "note": "charcuterie porcine"
+  },
+  {
+    "ingredients": ["Pavé de saumon", "Aneth"],
+    "proprietesAttendues": ["POISSON"],
+    "note": "poisson"
+  },
+  {
+    "ingredients": ["Surimi", "Mayonnaise"],
+    "proprietesAttendues": ["POISSON"],
+    "note": "surimi = poisson"
+  },
+  {
+    "ingredients": ["Crevettes roses", "Ail"],
+    "proprietesAttendues": ["FRUITS_DE_MER"],
+    "note": "fruits de mer ; ail ne doit pas matcher volaille"
+  },
+  {
+    "ingredients": ["Moules marinières"],
+    "proprietesAttendues": ["FRUITS_DE_MER"],
+    "note": "mollusques = fruits de mer"
+  },
+  {
+    "ingredients": ["Lait entier", "Farine", "Sucre"],
+    "proprietesAttendues": ["PRODUIT_ANIMAL"],
+    "note": "lait animal"
+  },
+  {
+    "ingredients": ["Parmesan râpé"],
+    "proprietesAttendues": ["PRODUIT_ANIMAL"],
+    "note": "fromage = produit animal"
+  },
+  {
+    "ingredients": ["Œufs", "Beurre doux"],
+    "proprietesAttendues": ["PRODUIT_ANIMAL"],
+    "note": "œuf + beurre"
+  },
+  {
+    "ingredients": ["Miel d'acacia"],
+    "proprietesAttendues": ["PRODUIT_ANIMAL"],
+    "note": "miel = produit animal (vegan)"
+  },
+  {
+    "ingredients": ["Feuille de gélatine"],
+    "proprietesAttendues": ["VIANDE", "PRODUIT_ANIMAL"],
+    "note": "gélatine = viande + produit animal"
+  },
+  {
+    "ingredients": ["Cuisse de volaille", "Thym"],
+    "proprietesAttendues": ["VIANDE"],
+    "note": "volaille détectée, pas via ail"
+  }
+]

@@ -1,0 +1,122 @@
+[
+  {
+    "ingredients": ["Farine de blé", "Œufs", "Beurre", "Sucre"],
+    "allergenesAttendus": ["GLUTEN", "OEUFS", "LAIT"],
+    "note": "Pâte sablée — gluten (blé), œufs (pluriel→singulier), lait (beurre)."
+  },
+  {
+    "ingredients": ["Crevettes roses", "Ail", "Persil", "Huile d'olive"],
+    "allergenesAttendus": ["CRUSTACES"],
+    "note": "Crevettes (pluriel) → crustacés ; ail/persil/huile d'olive non allergènes."
+  },
+  {
+    "ingredients": ["Saumon fumé", "Aneth", "Citron"],
+    "allergenesAttendus": ["POISSON"],
+    "note": "Poisson via saumon (multi-mots toléré)."
+  },
+  {
+    "ingredients": ["Beurre de cacahuète", "Pain de mie"],
+    "allergenesAttendus": ["ARACHIDES", "GLUTEN"],
+    "note": "Arachide (beurre de cacahuète) + gluten (pain). Le moteur peut sur-détecter LAIT (beurre) — sens conservateur, non annoté."
+  },
+  {
+    "ingredients": ["Sauce soja", "Tofu", "Riz"],
+    "allergenesAttendus": ["SOJA"],
+    "note": "Soja via sauce soja et tofu ; riz non reconnu."
+  },
+  {
+    "ingredients": ["Noix de cajou", "Pistache"],
+    "allergenesAttendus": ["FRUITS_A_COQUE"],
+    "note": "Multi-mots (noix de cajou) + pistache."
+  },
+  {
+    "ingredients": ["Céleri-rave", "Pomme de terre"],
+    "allergenesAttendus": ["CELERI"],
+    "note": "Céleri via céleri-rave (tiret normalisé)."
+  },
+  {
+    "ingredients": ["Moutarde de Dijon", "Vinaigre de vin", "Échalote"],
+    "allergenesAttendus": ["MOUTARDE", "SULFITES"],
+    "note": "Moutarde + sulfites (vinaigre de vin / vin)."
+  },
+  {
+    "ingredients": ["Graines de sésame", "Tahin"],
+    "allergenesAttendus": ["SESAME"],
+    "note": "Sésame via graines de sésame et tahin."
+  },
+  {
+    "ingredients": ["Vin blanc", "Beurre", "Estragon"],
+    "allergenesAttendus": ["SULFITES", "LAIT"],
+    "note": "Sulfites (vin) + lait (beurre)."
+  },
+  {
+    "ingredients": ["Farine de lupin", "Eau", "Sel"],
+    "allergenesAttendus": ["LUPIN"],
+    "note": "Lupin via farine de lupin ; pas de gluten (lupin ≠ blé)."
+  },
+  {
+    "ingredients": ["Moules", "Persil", "Ail"],
+    "allergenesAttendus": ["MOLLUSQUES"],
+    "note": "Mollusques via moules (pluriel)."
+  },
+  {
+    "ingredients": ["Calamars", "Citron", "Huile d'olive"],
+    "allergenesAttendus": ["MOLLUSQUES"],
+    "note": "Mollusques via calamars (pluriel)."
+  },
+  {
+    "ingredients": ["Mayonnaise", "Surimi", "Salade"],
+    "allergenesAttendus": ["OEUFS", "POISSON", "CRUSTACES"],
+    "note": "Dérivés : mayonnaise→œufs ; surimi→poisson+crustacés (multi-allergène)."
+  },
+  {
+    "ingredients": ["Mozzarella", "Tomate", "Basilic"],
+    "allergenesAttendus": ["LAIT"],
+    "note": "Lait via mozzarella ; tomate/basilic non reconnus."
+  },
+  {
+    "ingredients": ["Chocolat au lait", "Noisettes"],
+    "allergenesAttendus": ["LAIT", "FRUITS_A_COQUE"],
+    "note": "« lait » est un token entier ici (doit matcher) ; noisettes (pluriel)→fruits à coque."
+  },
+  {
+    "ingredients": ["Cuisse de volaille", "Ail", "Thym"],
+    "allergenesAttendus": [],
+    "note": "PIÈGE sous-chaîne : « lait » ⊄ « volaille », « ail » n'est pas un allergène → aucun allergène."
+  },
+  {
+    "ingredients": ["Tomate", "Basilic", "Huile d'olive", "Sel"],
+    "allergenesAttendus": [],
+    "note": "Aucun allergène connu → tout en ingredientsNonReconnus (rien d'attendu)."
+  },
+  {
+    "ingredients": ["Filet de truite", "Citron", "Aneth"],
+    "allergenesAttendus": ["POISSON"],
+    "note": "Poisson courant (truite) — comblé en revue."
+  },
+  {
+    "ingredients": ["Gruyère râpé", "Pain de campagne"],
+    "allergenesAttendus": ["LAIT", "GLUTEN"],
+    "note": "Fromage courant (gruyère) + gluten (pain) — comblé en revue."
+  },
+  {
+    "ingredients": ["Fruits de mer", "Persil", "Ail"],
+    "allergenesAttendus": ["CRUSTACES", "MOLLUSQUES"],
+    "note": "Terme générique → crustacés + mollusques (conservateur)."
+  },
+  {
+    "ingredients": ["Nuoc-mâm", "Riz", "Coriandre"],
+    "allergenesAttendus": ["POISSON"],
+    "note": "Nuoc-mâm seul (sans « sauce ») doit matcher — comblé en revue."
+  },
+  {
+    "ingredients": ["Gluten de blé", "Eau"],
+    "allergenesAttendus": ["GLUTEN"],
+    "note": "Nom littéral de l'allergène (« gluten ») — comblé en revue."
+  },
+  {
+    "ingredients": ["Raisins secs", "Sulfite"],
+    "allergenesAttendus": ["SULFITES"],
+    "note": "Singulier « sulfite » doit matcher la clé plurielle « sulfites » (tolérance pluriel bidirectionnelle)."
+  }
+]

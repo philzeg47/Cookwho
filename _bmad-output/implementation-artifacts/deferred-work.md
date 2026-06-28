@@ -23,6 +23,27 @@
 - **[Low → décision produit]** Soumissions concurrentes (deux onglets) : `deleteMany` puis `createMany` sans garde d'idempotence → dernier-écrit-gagne. Sémantique « remplace » probablement voulue ; à confirmer.
 - **[Low → story 3.4]** `monAcces` ne renvoie pas `statut` ; nécessaire pour accueillir un participant déjà REPONDU (« On a déjà tes préférences ✓ »). Déjà dans le périmètre de 3.4. ✅ RÉSOLU (3.4).
 
+## Deferred from: code review of moteur d'allergènes (stories 4.0 → 4.1b) (2026-06-27)
+
+> Revue moteur /core. ACs OK, gate asymétrique correct, pureté respectée. 2 patches (lacunes dico fort risque + tolérance pluriel bidirectionnelle) traités à part. Reports ci-dessous = curation continue / raffinements.
+
+- **[Med → curation continue]** Le gate « couvre 14 allergènes » ne protège que les **tokens-clés présents dans les fixtures**, pas les clés sœurs : supprimer `homard`/`crabe` en gardant `crevette` ne casse pas le build. Ajouter progressivement des fixtures **par clé à fort enjeu** (poissons, fromages, mollusques) pour durcir le gate.
+- **[Low → curation]** Sur-détection conservatrice : `noix de muscade` (muscade) et `noix de coco` (coco) → FRUITS_A_COQUE via la clé `noix` (ni l'une ni l'autre n'est un fruit à coque réglementaire UE). Sûr côté sécurité mais nuit à l'UX. Raffinement possible : « clé la plus longue gagnante » ou liste d'exclusions explicites.
+- **[Low]** Pluriels irréguliers `-al`→`-aux` non transformés par `tokenCorrespond` (aucune clé concernée actuellement ; à couvrir si une clé future l'exige, ex. `corail`/`coraux`).
+- **[Low → post-V1]** Complétude exhaustive du dictionnaire = **curation continue**. Le dictionnaire maison est volontairement non-exhaustif (stories 4.0/4.1b). Piste d'enrichissement tracé hors-ligne via Open Food Facts (architecture, différé).
+
+## Deferred from: story 4.3b (régimes alimentaires) (2026-06-28)
+
+- **[Med → post-V1]** **Halal / Casher par propriétés** : différés (décision produit 2026-06-28). On ne peut pas certifier l'abattage/la préparation depuis une liste d'ingrédients ; seules des violations claires sont détectables (porc, alcool ; crustacés/mollusques pour casher). Restent traités en **incertitude** (« régime non évalué ») par le mur — aucune exclusion ni prétention de conformité. Évolution possible : détecter porc/alcool/fruits de mer pour **exclure le clair** + marquer « incertain » sur la certification. Prérequis : 4.3b (dico propriétés) livré.
+
+## Deferred from: code review of moteur de génération (stories 4.2 → 4.4b) (2026-06-27)
+
+> Revue combinée. Invariant de sécurité OK (aucune recette violant le mur retenue), 27/27 ACs satisfaits. 6 patches de correction appliqués. Reports ci-dessous = à traiter quand le contexte l'exige.
+
+- **[Med → quand la recherche par requête sera branchée]** Cache `RecetteCache` clé sur `source` seul (pas `requete`/`limite`) : aujourd'hui inoffensif car la génération utilise une requête vide (pool large par source, borné par `take` après le patch). Mais l'API `recupererRecettes({ requete })` ment : une 2ᵉ requête distincte resert les recettes de la 1ʳᵉ. Quand la recherche par mots-clés arrivera : colonne `requete` (normalisée) + `@@unique([source, requete, sourceRef])` + filtrer `lireCache` dessus.
+- **[Low → 4.5]** `resoudre` renvoie `PAS_ASSEZ` sans distinguer « épuisé après régénérer » de « trop peu dès le départ ». La dégradation élégante (4.5) raffinera ce Result.
+- **[Low]** `resoudre` fait confiance au `detection` fourni dans `RecetteEntree` (cohérent avec `ingredients` dans le pipeline actuel, dérivés du même texte). Pour un futur appelant qui construirait `detection` séparément, dériver `detection` dans `resoudre` ou documenter/asserter l'invariant.
+
 ## Deferred from: code review of Epic 3 (stories 3.2b → 3.5) (2026-06-26)
 
 > Revue combinée Epic 3. Backbone propre (tous ACs OK, NFR4/5/6 vérifiés). 2 patches data-fidelité appliqués sur le seuil de tolérance. Reports ci-dessous = polish UX/robustesse, non bloquants.

@@ -119,3 +119,18 @@ model VerificationToken {
 
     @@unique([identifier, token])
 }
+
+// Cache persistant des recettes récupérées via une SourceDeRecettes (story 4.2).
+// Résilience : si la source casse, on resert le cache. Texte d'ingrédients BRUT
+// (non normalisé) ; la normalisation/détection /core s'applique plus tard (4.4).
+model RecetteCache {
+    id               String   @id @default(cuid())
+    source           String // ex. "marmiton"
+    sourceRef        String // identifiant stable côté source (URL/slug)
+    titre            String
+    ingredientsTexte String[] // lignes d'ingrédients en texte libre
+    fetchedAt        DateTime @default(now())
+
+    @@unique([source, sourceRef])
+    @@index([source])
+}
