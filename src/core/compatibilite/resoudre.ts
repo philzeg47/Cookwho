@@ -80,9 +80,11 @@ export function resoudre(
 
   // Diagnostic d'échec (4.6) : par clé (allergène ou propriété), type + libellé
   // + nb de recettes bloquées au mur. Seules les exclusions DU MUR comptent.
+  // Clé de Map NAMESPACÉE par type : un allergène et une propriété de même nom
+  // (ex. allergène POISSON vs propriété POISSON) sont deux contraintes distinctes.
   const blocages = new Map<
     string,
-    { type: ContrainteBloquante["type"]; libelle: string; recettesBloquees: number }
+    { type: ContrainteBloquante["type"]; cle: string; libelle: string; recettesBloquees: number }
   >();
 
   const compatibles: RecetteRetenue[] = [];
@@ -95,15 +97,16 @@ export function resoudre(
       for (const raison of verdict.raisons) {
         const cle =
           raison.type === "REGIME_ALIMENTAIRE" ? raison.propriete : raison.allergene;
-        if (clesVues.has(cle)) continue;
-        clesVues.add(cle);
+        const cleMap = `${raison.type}:${cle}`;
+        if (clesVues.has(cleMap)) continue;
+        clesVues.add(cleMap);
         const libelle =
           raison.type === "REGIME_ALIMENTAIRE"
             ? raison.libelle
             : LIBELLES_ALLERGENES[raison.allergene];
-        const existant = blocages.get(cle);
+        const existant = blocages.get(cleMap);
         if (existant) existant.recettesBloquees += 1;
-        else blocages.set(cle, { type: raison.type, libelle, recettesBloquees: 1 });
+        else blocages.set(cleMap, { type: raison.type, cle, libelle, recettesBloquees: 1 });
       }
       continue; // sécurité : jamais retenu
     }
@@ -127,8 +130,8 @@ export function resoudre(
   // la/les contrainte(s) bloquante(s), triées par impact décroissant. Pool trop
   // petit sans exclusion → liste vide (l'UI distingue les deux cas).
   if (compatibles.length < min) {
-    const contraintesBloquantes: ContrainteBloquante[] = [...blocages.entries()]
-      .map(([cle, { type, libelle, recettesBloquees }]) => ({
+    const contraintesBloquantes: ContrainteBloquante[] = [...blocages.values()]
+      .map(({ type, cle, libelle, recettesBloquees }) => ({
         type,
         cle,
         libelle,

@@ -4,7 +4,7 @@
 // jamais en sous-chaîne. Sens conservateur : un ingrédient non classé → marqué
 // non reconnu (le mur le traite en « incertain » si un régime est déclaré).
 
-import { contientTokens, tokeniser } from "../texte";
+import { contientTokens, indexDeTokens, tokeniser } from "../texte";
 
 /** Propriétés d'un ingrédient pertinentes pour les régimes alimentaires. */
 export type ProprieteAlimentaire =
@@ -94,8 +94,8 @@ export const DICTIONNAIRE_PROPRIETES: EntreeProprietes[] = [
   { ingredient: "andouille", proprietes: [P, V] },
   { ingredient: "boudin", proprietes: [P, V] },
   { ingredient: "rillettes", proprietes: [P, V] },
-  { ingredient: "saucisse", proprietes: [V] }, // générique (pas forcément porc)
-  { ingredient: "merguez", proprietes: [V] },
+  { ingredient: "saucisse", proprietes: [P, V] }, // ambigu → conservateur (sans porc)
+  { ingredient: "merguez", proprietes: [V] }, // bœuf/agneau (jamais porc)
   // — Poissons —
   { ingredient: "poisson", proprietes: [F] },
   { ingredient: "saumon", proprietes: [F] },
@@ -103,7 +103,8 @@ export const DICTIONNAIRE_PROPRIETES: EntreeProprietes[] = [
   { ingredient: "cabillaud", proprietes: [F] },
   { ingredient: "colin", proprietes: [F] },
   { ingredient: "merlu", proprietes: [F] },
-  { ingredient: "lieu", proprietes: [F] },
+  { ingredient: "lieu noir", proprietes: [F] }, // « lieu » nu = mot courant (au lieu de)
+  { ingredient: "lieu jaune", proprietes: [F] },
   { ingredient: "sardine", proprietes: [F] },
   { ingredient: "maquereau", proprietes: [F] },
   { ingredient: "truite", proprietes: [F] },
@@ -160,23 +161,20 @@ export type ResultatProprietes = {
   ingredientsNonReconnus: string[];
 };
 
-/** Index précalculé (pur) : tokens normalisés + drapeau « laitier générique ». */
+/** Index précalculé (pur) : tokens normalisés. */
 const INDEX: ReadonlyArray<{
   tokens: string[];
   proprietes: ProprieteAlimentaire[];
-  laitierGenerique: boolean;
 }> = DICTIONNAIRE_PROPRIETES.map((e) => ({
   tokens: tokeniser(e.ingredient),
   proprietes: e.proprietes,
-  // « lait » / « crème » seuls : contribution laitière neutralisée par un lait végétal.
-  laitierGenerique: ["lait", "creme"].includes(tokeniser(e.ingredient).join(" ")),
 }));
 
 /**
  * Laits/crèmes VÉGÉTAUX (décision 4.3b) : « lait de coco » n'est PAS un produit
- * animal. Quand une telle locution est présente sur une ligne, on neutralise la
- * contribution laitière GÉNÉRIQUE (« lait »/« crème ») de cette ligne — les
- * autres entrées (fromage, œuf, lardons…) s'appliquent normalement.
+ * animal. On RETIRE la locution végétale des tokens AVANT la détection — ainsi
+ * un éventuel produit laitier réel sur la même ligne (« lait de coco et crème
+ * fraîche ») reste, lui, bien détecté.
  */
 const LAITS_VEGETAUX: ReadonlyArray<string[]> = [
   "lait de coco",
@@ -185,6 +183,9 @@ const LAITS_VEGETAUX: ReadonlyArray<string[]> = [
   "lait d avoine",
   "lait de riz",
   "lait de noisette",
+  "lait de cajou",
+  "lait de chanvre",
+  "lait d epeautre",
   "creme de coco",
   "creme de soja",
 ].map((p) => tokeniser(p));
@@ -194,16 +195,21 @@ export function detecterProprietes(ingredients: string[]): ResultatProprietes {
   const ingredientsNonReconnus: string[] = [];
 
   for (const ligne of ingredients) {
-    const tokens = tokeniser(ligne);
-    const estLaitVegetal = LAITS_VEGETAUX.some((p) => contientTokens(tokens, p));
-    let reconnu = estLaitVegetal;
+    let tokens = tokeniser(ligne);
+    let reconnu = false;
+
+    // Retirer les locutions de lait végétal (reconnues, mais sans propriété).
+    for (const phrase of LAITS_VEGETAUX) {
+      let idx: number;
+      while ((idx = indexDeTokens(tokens, phrase)) !== -1) {
+        tokens = [...tokens.slice(0, idx), ...tokens.slice(idx + phrase.length)];
+        reconnu = true;
+      }
+    }
 
     for (const entree of INDEX) {
       if (!contientTokens(tokens, entree.tokens)) continue;
       reconnu = true;
-      // Lait végétal : ne pas compter la propriété « produit animal » du lait
-      // ou de la crème génériques pour cette ligne.
-      if (estLaitVegetal && entree.laitierGenerique) continue;
       for (const p of entree.proprietes) trouvees.add(p);
     }
 

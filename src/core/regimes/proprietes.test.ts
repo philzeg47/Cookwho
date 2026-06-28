@@ -26,6 +26,24 @@ describe("detecterProprietes", () => {
     expect(proprietes).toContain("PRODUIT_ANIMAL");
   });
 
+  it("sur une MÊME ligne, un produit laitier réel reste détecté malgré un lait végétal (patch revue)", () => {
+    expect(detecterProprietes(["Lait de coco et crème fraîche"]).proprietes).toContain("PRODUIT_ANIMAL");
+  });
+
+  it("laits végétaux supplémentaires (cajou/chanvre) ≠ produit animal", () => {
+    expect(detecterProprietes(["Lait de cajou"]).proprietes).toEqual([]);
+    expect(detecterProprietes(["Lait de chanvre"]).proprietes).toEqual([]);
+  });
+
+  it("« saucisse » est conservativement classée porc (garantie sans porc)", () => {
+    expect(detecterProprietes(["Saucisse de Toulouse"]).proprietes).toContain("PORC");
+  });
+
+  it("ne confond pas le poisson « lieu » avec le mot courant « au lieu de »", () => {
+    expect(detecterProprietes(["Cuire au lieu de frire"]).proprietes).toEqual([]);
+    expect(detecterProprietes(["Filet de lieu noir"]).proprietes).toContain("POISSON");
+  });
+
   it("signale les ingrédients non reconnus (incertitude régime)", () => {
     const { ingredientsNonReconnus } = detecterProprietes(["Tofu fumé zzz", "Bœuf"]);
     expect(ingredientsNonReconnus).toContain("Tofu fumé zzz");

@@ -22,13 +22,16 @@ function tokenCorrespond(token: string, cible: string): boolean {
   return token === cible || racine(token) === racine(cible);
 }
 
-/** Les `cibleTokens` forment-ils une sous-séquence contiguë de `tokensSource` ? */
-export function contientTokens(
+/**
+ * Index de début de la 1ʳᵉ sous-séquence contiguë `cibleTokens` dans
+ * `tokensSource`, ou -1. (Tolérance pluriel bidirectionnelle.)
+ */
+export function indexDeTokens(
   tokensSource: string[],
   cibleTokens: string[],
-): boolean {
+): number {
   if (cibleTokens.length === 0 || cibleTokens.length > tokensSource.length) {
-    return false;
+    return -1;
   }
   for (let i = 0; i <= tokensSource.length - cibleTokens.length; i++) {
     let ok = true;
@@ -38,7 +41,15 @@ export function contientTokens(
         break;
       }
     }
-    if (ok) return true;
+    if (ok) return i;
   }
-  return false;
+  return -1;
+}
+
+/** Les `cibleTokens` forment-ils une sous-séquence contiguë de `tokensSource` ? */
+export function contientTokens(
+  tokensSource: string[],
+  cibleTokens: string[],
+): boolean {
+  return indexDeTokens(tokensSource, cibleTokens) !== -1;
 }

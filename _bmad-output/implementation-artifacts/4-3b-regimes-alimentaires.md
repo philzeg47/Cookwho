@@ -8,7 +8,7 @@ As a participant au régime alimentaire (végétarien, vegan, pescétarien, sans
 I want que le menu respecte mon régime,
 so that je peux manger sereinement. (FR9, complète le mur 4.3)
 
-Status: review
+Status: done
 
 ## Story
 
@@ -68,6 +68,17 @@ Le mur (4.3) exclut déjà sur allergènes + régimes-allergènes (sans gluten�
   - [x] `generation.test.ts` : bout-en-bout, un participant végétarien exclut une recette à la viande.
   - [x] **Non-régression** : tout l'existant (allergènes, curseur, dégradation, échec, forcée) reste vert.
   - [x] `npm run test`, `lint`, `typecheck`, `SKIP_ENV_VALIDATION=1 build` → tout vert.
+
+### Review Findings
+
+> Revue de code adversariale du 2026-06-28 (3 couches), story 4.3b, diff depuis `e2e8f5b`. Verdict : **9/9 ACs satisfaits**, pureté `/core` OK, modèle 3 états (sûr/incertain/exclu) testé. Findings réels : 5 patches (2 direction non-sûre, 1 correction, 2 UX/sur-exclusion) · 1 note.
+
+- [x] [Review][Patch] **[Med — direction non-sûre]** Neutralisation lait végétal **par ligne** → produit laitier réel d'une même ligne supprimé. **Corrigé** : `indexDeTokens` (nouveau, `texte.ts`) + **retrait du span** de la locution végétale avant détection ; un vrai laitier sur la même ligne reste détecté (+ test). [src/core/regimes/proprietes.ts, src/core/texte.ts]
+- [x] [Review][Patch] **[Med — direction non-sûre]** `saucisse` → `[PORC, VIANDE]` (conservateur, « sans porc » l'exclut) ; `merguez` reste VIANDE. + test. [src/core/regimes/proprietes.ts]
+- [x] [Review][Patch] **[Med — correction]** Collision `blocages` POISSON allergène/propriété → **clé Map namespacée par type** (`${type}:${cle}`), code brut conservé dans `cle`. + test (les 2 contraintes nommées). [src/core/compatibilite/resoudre.ts]
+- [x] [Review][Patch] **[Low — sur-exclusion]** `lieu` nu retiré → `lieu noir`/`lieu jaune` ; plus de faux match sur « au lieu de ». + test. [src/core/regimes/proprietes.ts]
+- [x] [Review][Patch] **[Low — sur-exclusion]** Laits végétaux ajoutés (cajou/chanvre/épeautre) à `LAITS_VEGETAUX`. + test. [src/core/regimes/proprietes.ts]
+- [x] [Review][Note] Le gate corpus est asymétrique (faux négatif = rouge) ; les protections anti-faux-positifs (« ail » ⊄ « volaille », lait de coco) vivent en tests unitaires, pas dans le corpus data-driven. Conforme au design (« faux positifs ne cassent pas le build »). Curation continue possible.
 
 ## Dev Notes
 
@@ -174,4 +185,5 @@ claude-opus-4-8 (bmad-dev-story)
 
 ### Change Log
 
-- 2026-06-28 : Story 4.3b implémentée — régimes alimentaires (dico ingrédient→propriété). Nouveau sous-domaine `core/regimes/` (5 propriétés + dico + détection + corpus d'or) ; mur étendu (exclusion sur propriété + incertitude 3 états, rétro-compatible) ; 4 régimes (végétarien/vegan/pescétarien/sans porc) évalués, Halal/Casher différés ; `ContrainteBloquante` généralisée (`cle`). Bout-en-bout + non-régression OK. 259/259, lint/typecheck/build verts. Statut → review. **Epic 4 (moteur de sécurité & compatibilité) fonctionnellement COMPLET.**
+- 2026-06-28 : Story 4.3b implémentée — régimes alimentaires (dico ingrédient→propriété). Nouveau sous-domaine `core/regimes/` (5 propriétés + dico + détection + corpus d'or) ; mur étendu (exclusion sur propriété + incertitude 3 états, rétro-compatible) ; 4 régimes (végétarien/vegan/pescétarien/sans porc) évalués, Halal/Casher différés ; `ContrainteBloquante` généralisée (`cle`). Bout-en-bout + non-régression OK. 259/259, lint/typecheck/build verts. Statut → review.
+- 2026-06-28 : Revue de code (3 couches). 9/9 ACs, pureté/3-états OK. 5 patches appliqués : neutralisation lait végétal par retrait de span (+`indexDeTokens`), `saucisse`→porc, clé `blocages` namespacée (collision POISSON), `lieu` nu retiré, laits végétaux étendus. Tests 264/264, lint/typecheck/build verts. Statut → done. **Epic 4 (moteur de sécurité & compatibilité) COMPLET.**

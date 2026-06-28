@@ -256,6 +256,25 @@ describe("échec explicatif (4.6)", () => {
     }
   });
 
+  it("ne fusionne PAS un allergène et une propriété de même nom (POISSON allergène vs propriété)", () => {
+    const c = construireContraintes([
+      { type: "ALLERGIE", valeur: "Poisson" },
+      { type: "REGIME", valeur: "Végétarien" },
+    ]);
+    const saumon = (ref: string): RecetteEntree => ({
+      ...recette(ref),
+      detection: { allergenes: ["POISSON"], ingredientsNonReconnus: [] },
+      detectionProprietes: { proprietes: ["POISSON"], ingredientsNonReconnus: [] },
+    });
+    const res = resoudre([saumon("s0"), saumon("s1"), saumon("s2"), recette("ok")], c, []);
+    expect(res.ok).toBe(false);
+    if (!res.ok) {
+      const types = res.contraintesBloquantes.filter((x) => x.cle === "POISSON").map((x) => x.type);
+      expect(new Set(types)).toEqual(new Set(["ALLERGIE", "REGIME_ALIMENTAIRE"]));
+      for (const cb of res.contraintesBloquantes) expect(cb.recettesBloquees).toBe(3);
+    }
+  });
+
   it("nomme un régime alimentaire bloquant (REGIME_ALIMENTAIRE, libellé propriété)", () => {
     const c = construireContraintes([{ type: "REGIME", valeur: "Végétarien" }]);
     const viande = (ref: string): RecetteEntree => ({
