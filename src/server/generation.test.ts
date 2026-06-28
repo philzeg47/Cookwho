@@ -110,6 +110,57 @@ describe("genererPourRepas", () => {
     }
   });
 
+  it("attribue les ingrédients gênants aux convives (genantsParConvive, 5.2)", async () => {
+    const m = dbMock([
+      { prenom: "Paul", statut: "REPONDU", restrictions: [{ type: "NON_AIME", valeur: "Champignons", seuilTolerance: 0 }] },
+      { prenom: "Max", statut: "REPONDU", restrictions: [{ type: "NON_AIME", valeur: "Champignons", seuilTolerance: 1 }] },
+    ]);
+    const recettes = Array.from({ length: 4 }, (_, i) => recetteBrute(`r${i}`, ["champignons", `g${i}`]));
+    const res = await genererPourRepas(m.db, sourceFactice(recettes), OPTS);
+    expect(res.statut).toBe("GENERE");
+    if (res.statut === "GENERE") {
+      expect(res.genantsParConvive.Champignons).toEqual(["Paul", "Max"]);
+      // En dégradation, les recettes portent l'ingrédient gênant.
+      if (res.resolution.ok) {
+        expect(res.resolution.mode).toBe("DEGRADATION");
+        expect(res.resolution.recettes[0]!.ingredientsGenants).toContain("Champignons");
+      }
+    }
+  });
+
+  it("nomme les répondants ayant une allergie (prenomsAvecAllergie, 5.3)", async () => {
+    const m = dbMock([
+      { prenom: "Léa", statut: "REPONDU", restrictions: [{ type: "ALLERGIE", valeur: "Arachides", seuilTolerance: null }] },
+      { prenom: "Tom", statut: "REPONDU", restrictions: [{ type: "NON_AIME", valeur: "Olives", seuilTolerance: 0 }] },
+    ]);
+    const recettes = Array.from({ length: 4 }, (_, i) => recetteBrute(`r${i}`, ["tomate"]));
+    const res = await genererPourRepas(m.db, sourceFactice(recettes), OPTS);
+    expect(res.statut).toBe("GENERE");
+    if (res.statut === "GENERE") {
+      expect(res.prenomsAvecAllergie).toEqual(["Léa"]); // Tom (non-aimé) n'est pas une allergie
+    }
+  });
+
+  it("déduplique les prénoms homonymes (genantsParConvive / prenomsAvecAllergie)", async () => {
+    const m = dbMock([
+      { prenom: "Paul", statut: "REPONDU", restrictions: [{ type: "ALLERGIE", valeur: "Arachides", seuilTolerance: null }, { type: "NON_AIME", valeur: "Olives", seuilTolerance: 0 }] },
+      { prenom: "Paul", statut: "REPONDU", restrictions: [{ type: "ALLERGIE", valeur: "Lait", seuilTolerance: null }, { type: "NON_AIME", valeur: "Olives", seuilTolerance: 1 }] },
+    ]);
+    const recettes = Array.from({ length: 4 }, (_, i) => recetteBrute(`r${i}`, ["tomate"]));
+    const res = await genererPourRepas(m.db, sourceFactice(recettes), OPTS);
+    if (res.statut === "GENERE") {
+      expect(res.prenomsAvecAllergie).toEqual(["Paul"]); // dédupliqué
+      expect(res.genantsParConvive.Olives).toEqual(["Paul"]); // dédupliqué
+    }
+  });
+
+  it("prenomsAvecAllergie vide quand aucune allergie déclarée", async () => {
+    const m = dbMock([repondu("Léa")]);
+    const recettes = Array.from({ length: 4 }, (_, i) => recetteBrute(`r${i}`, ["tomate"]));
+    const res = await genererPourRepas(m.db, sourceFactice(recettes), OPTS);
+    if (res.statut === "GENERE") expect(res.prenomsAvecAllergie).toEqual([]);
+  });
+
   it("propage l'incertitude (ingrédient non reconnu)", async () => {
     const m = dbMock([repondu("Léa")]);
     const recettes = [

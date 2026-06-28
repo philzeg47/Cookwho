@@ -59,6 +59,10 @@ export type OptionsGeneration = {
  *    pas forcé → on NE génère PAS (pas d'appel source), on liste les non-couverts.
  *  - GENERE : génération faite. `force` est vrai si elle a ignoré des manquants
  *    (`nonCouverts` les nomme, pour l'avertissement). Le mur n'est jamais affaibli.
+ *    `genantsParConvive` (5.2) : aliment non-aimé → prénoms des répondants qui
+ *    l'ont déclaré, pour signaler « qui » est gêné par une recette dégradée.
+ *    `prenomsAvecAllergie` (5.3) : prénoms des répondants ayant déclaré une
+ *    allergie, pour l'avertissement human-in-the-loop avant de retenir (FR16).
  */
 export type ResultatGeneration =
   | { statut: "ATTENTE_REPONSES"; nonCouverts: string[] }
@@ -67,6 +71,8 @@ export type ResultatGeneration =
       force: boolean;
       nonCouverts: string[];
       resolution: ResultatResolution;
+      genantsParConvive: Record<string, string[]>;
+      prenomsAvecAllergie: string[];
     };
 
 export async function genererPourRepas(
@@ -128,5 +134,32 @@ export async function genererPourRepas(
   }));
 
   const resolution = resoudre(entrees, contraintes, nonAimes, { exclure });
-  return { statut: "GENERE", force: nonCouverts.length > 0, nonCouverts, resolution };
+
+  // Attribution « qui est gêné » (5.2) : non-aimé (valeur) → prénoms des
+  // répondants l'ayant déclaré. L'UI résout les `ingredientsGenants` d'une
+  // recette via ce mapping. `/core` reste inchangé.
+  // Prénoms dédupliqués par `Set` (lignes dupliquées ou convives homonymes).
+  const genantsSets: Record<string, Set<string>> = {};
+  const allergieSet = new Set<string>();
+  for (const p of repas.participants) {
+    if (p.statut !== "REPONDU") continue;
+    let aAllergie = false;
+    for (const r of p.restrictions) {
+      if (r.type === "NON_AIME") (genantsSets[r.valeur] ??= new Set()).add(p.prenom);
+      else if (r.type === "ALLERGIE") aAllergie = true;
+    }
+    if (aAllergie) allergieSet.add(p.prenom);
+  }
+  const genantsParConvive: Record<string, string[]> = Object.fromEntries(
+    Object.entries(genantsSets).map(([valeur, set]) => [valeur, [...set]]),
+  );
+
+  return {
+    statut: "GENERE",
+    force: nonCouverts.length > 0,
+    nonCouverts,
+    resolution,
+    genantsParConvive,
+    prenomsAvecAllergie: [...allergieSet],
+  };
 }

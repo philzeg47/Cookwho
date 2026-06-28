@@ -165,4 +165,26 @@ export const organisateurRouter = createTRPCRouter({
         forcer: input.forcer,
       });
     }),
+
+  /**
+   * Retient un plat pour un repas possédé (story 5.1). Réservé organisateur
+   * (NFR5) ; l'avertissement allergie + validation (5.3) s'insérera EN AMONT.
+   */
+  retenirPlat: protectedProcedure
+    .input(
+      z.object({
+        repasId: z.string(),
+        ref: z.string().min(1).max(500),
+        titre: z.string().trim().min(1).max(300),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Ownership : n'écrit que si le repas appartient à la session.
+      const res = await ctx.db.repas.updateMany({
+        where: { id: input.repasId, organisateurId: ctx.session.user.id },
+        data: { platRetenuRef: input.ref, platRetenuTitre: input.titre },
+      });
+      if (res.count === 0) throw new TRPCError({ code: "NOT_FOUND" });
+      return { ok: true as const };
+    }),
 });

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import { AjouterParticipantForm } from "~/components/organisateur/AjouterParticipantForm";
 import { ParticipantsListe } from "~/components/organisateur/ParticipantsListe";
+import { RecettesSection } from "~/components/organisateur/RecettesSection";
 import { SuiviReponses } from "~/components/organisateur/SuiviReponses";
 import { api } from "~/trpc/server";
 
@@ -45,6 +46,14 @@ export default async function RepasDetailPage({
         <AjouterParticipantForm repasId={repas.id} />
         <ParticipantsListe participants={repas.participants} />
       </section>
+
+      {repas.platRetenuTitre ? (
+        <p className="bg-safe/10 border-safe text-safe-text rounded-md border px-4 py-2 font-semibold">
+          Menu retenu : {repas.platRetenuTitre}
+        </p>
+      ) : null}
+
+      <RecettesSection repasId={repas.id} platRetenuRef={repas.platRetenuRef} />
     </main>
   );
 }
