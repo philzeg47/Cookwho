@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-06-19
-last_updated: 2026-06-25  # Epic 2 → done (revue complète)
+last_updated: 2026-06-26  # Epic 3 terminé (revue combinée 3.2b→3.5, 2 patches)
 project: CookWho
 project_key: NOKEY
 tracking_system: file-system
@@ -61,12 +61,14 @@ development_status:
   epic-2-retrospective: optional
 
   # Epic 3 : Le participant déclare ses contraintes
-  epic-3: backlog
-  3-1-acces-participant-par-lien-sans-compte: backlog
-  3-2-saisir-ses-restrictions-en-3-etapes: backlog
-  3-3-recapitulatif-confirmation-de-prise-en-compte: backlog
-  3-4-modifier-ses-restrictions: backlog
-  3-5-etats-du-lien-participant: backlog
+  epic-3: done
+  3-1-acces-participant-par-lien-sans-compte: done
+  # 3.2 découpée (story dense) : 3.2a coquille + persistance, 3.2b contenu des 3 étapes
+  3-2a-assistant-restrictions-coquille: done
+  3-2b-assistant-restrictions-contenu: done
+  3-3-recapitulatif-confirmation-de-prise-en-compte: done
+  3-4-modifier-ses-restrictions: done
+  3-5-etats-du-lien-participant: done
   epic-3-retrospective: optional
 
   # Epic 4 : Moteur de sécurité & compatibilité
