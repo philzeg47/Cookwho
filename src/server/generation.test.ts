@@ -93,6 +93,23 @@ describe("genererPourRepas", () => {
     }
   });
 
+  it("exclut de bout en bout une recette à la viande pour un participant végétarien (4.3b)", async () => {
+    const m = dbMock([
+      { prenom: "Léa", statut: "REPONDU", restrictions: [{ type: "REGIME", valeur: "Végétarien", seuilTolerance: null }] },
+    ]);
+    const recettes = [
+      recetteBrute("viande", ["émincé de bœuf", "oignon"]),
+      recetteBrute("a", ["tomate"]),
+      recetteBrute("b", ["riz"]),
+      recetteBrute("c", ["lentilles"]),
+    ];
+    const res = await genererPourRepas(m.db, sourceFactice(recettes), OPTS);
+    expect(res.statut).toBe("GENERE");
+    if (res.statut === "GENERE" && res.resolution.ok) {
+      expect(res.resolution.recettes.map((r) => r.ref)).not.toContain("viande");
+    }
+  });
+
   it("propage l'incertitude (ingrédient non reconnu)", async () => {
     const m = dbMock([repondu("Léa")]);
     const recettes = [

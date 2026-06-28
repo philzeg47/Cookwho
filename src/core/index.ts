@@ -37,3 +37,16 @@ export {
   resoudre,
 } from "./compatibilite";
 export { tokeniser, contientTokens } from "./texte";
+
+export type {
+  ProprieteAlimentaire,
+  EntreeProprietes,
+  ResultatProprietes,
+} from "./regimes";
+export {
+  PROPRIETES_CODES,
+  LIBELLES_PROPRIETES,
+  REGIMES_VERS_PROPRIETES,
+  DICTIONNAIRE_PROPRIETES,
+  detecterProprietes,
+} from "./regimes";

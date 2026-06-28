@@ -23,11 +23,24 @@ describe("construireContraintes", () => {
     expect(new Set(c.allergenesInterdits)).toEqual(new Set(["GLUTEN", "LAIT"]));
   });
 
-  it("signale un régime alimentaire non évalué (incertitude, pas interdit)", () => {
-    const c = construireContraintes([{ type: "REGIME", valeur: "Végétarien" }]);
+  it("signale un régime non évalué (Halal/Casher différés → incertitude)", () => {
+    const c = construireContraintes([{ type: "REGIME", valeur: "Casher" }]);
     expect(c.allergenesInterdits).toEqual([]);
+    expect(c.proprietesInterdites).toEqual([]);
     expect(c.incertitudes).toHaveLength(1);
-    expect(c.incertitudes[0]).toMatch(/Végétarien/);
+    expect(c.incertitudes[0]).toMatch(/Casher/);
+  });
+
+  it("mappe un régime alimentaire (végétarien/vegan…) vers des propriétés interdites", () => {
+    const veg = construireContraintes([{ type: "REGIME", valeur: "Végétarien" }]);
+    expect(new Set(veg.proprietesInterdites)).toEqual(
+      new Set(["VIANDE", "POISSON", "FRUITS_DE_MER"]),
+    );
+    expect(veg.regimesAlimentaires).toBe(true);
+    expect(veg.incertitudes).toEqual([]);
+
+    const porc = construireContraintes([{ type: "REGIME", valeur: "Sans porc" }]);
+    expect(porc.proprietesInterdites).toEqual(["PORC"]);
   });
 
   it("signale une allergie libre non mappable (incertitude)", () => {
@@ -88,10 +101,37 @@ describe("mur — verdict", () => {
   });
 
   it("marque INCERTAIN si un régime non évalué est présent (jamais sûr à tort)", () => {
-    const c = construireContraintes([{ type: "REGIME", valeur: "Vegan" }]);
+    const c = construireContraintes([{ type: "REGIME", valeur: "Halal" }]);
     const v = mur(c, sansInconnu([]));
     expect(v.exclu).toBe(false);
     if (!v.exclu) expect(v.incertain).toBe(true);
+  });
+
+  it("EXCLUT sur propriété interdite par un régime alimentaire (végétarien + viande)", () => {
+    const c = construireContraintes([{ type: "REGIME", valeur: "Végétarien" }]);
+    const v = mur(c, sansInconnu([]), { proprietes: ["VIANDE"], ingredientsNonReconnus: [] });
+    expect(v.exclu).toBe(true);
+    if (v.exclu) {
+      expect(v.raisons).toContainEqual({ type: "REGIME_ALIMENTAIRE", propriete: "VIANDE", libelle: "viande" });
+    }
+  });
+
+  it("pescétarien : exclut la viande mais autorise le poisson", () => {
+    const c = construireContraintes([{ type: "REGIME", valeur: "Pescétarien" }]);
+    const viande = mur(c, sansInconnu([]), { proprietes: ["VIANDE"], ingredientsNonReconnus: [] });
+    const poisson = mur(c, sansInconnu([]), { proprietes: ["POISSON"], ingredientsNonReconnus: [] });
+    expect(viande.exclu).toBe(true);
+    expect(poisson.exclu).toBe(false);
+  });
+
+  it("INCERTAIN si régime alimentaire déclaré + ingrédient non classé (jamais sûr à tort)", () => {
+    const c = construireContraintes([{ type: "REGIME", valeur: "Vegan" }]);
+    const v = mur(c, sansInconnu([]), { proprietes: [], ingredientsNonReconnus: ["substitut mystere"] });
+    expect(v.exclu).toBe(false);
+    if (!v.exclu) {
+      expect(v.incertain).toBe(true);
+      expect(v.raisonsIncertitude.join(" ")).toMatch(/non classé/);
+    }
   });
 
   it("verdict SÛR quand rien n'est violé ni incertain", () => {

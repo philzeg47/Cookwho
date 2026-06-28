@@ -211,7 +211,7 @@ describe("échec explicatif (4.6)", () => {
       expect(res.contraintesBloquantes).toEqual([
         {
           type: "ALLERGIE",
-          allergene: "ARACHIDES",
+          cle: "ARACHIDES",
           libelle: LIBELLES_ALLERGENES.ARACHIDES,
           recettesBloquees: 3,
         },
@@ -237,7 +237,7 @@ describe("échec explicatif (4.6)", () => {
     );
     expect(res.ok).toBe(false);
     if (!res.ok) {
-      expect(res.contraintesBloquantes.map((x) => x.allergene)).toEqual(["ARACHIDES", "MOUTARDE"]);
+      expect(res.contraintesBloquantes.map((x) => x.cle)).toEqual(["ARACHIDES", "MOUTARDE"]);
       expect(res.contraintesBloquantes[0]!.recettesBloquees).toBe(3);
       expect(res.contraintesBloquantes[1]!.recettesBloquees).toBe(1);
     }
@@ -252,7 +252,25 @@ describe("échec explicatif (4.6)", () => {
     );
     expect(res.ok).toBe(false);
     if (!res.ok) {
-      expect(res.contraintesBloquantes[0]).toMatchObject({ type: "REGIME", allergene: "GLUTEN" });
+      expect(res.contraintesBloquantes[0]).toMatchObject({ type: "REGIME", cle: "GLUTEN" });
+    }
+  });
+
+  it("nomme un régime alimentaire bloquant (REGIME_ALIMENTAIRE, libellé propriété)", () => {
+    const c = construireContraintes([{ type: "REGIME", valeur: "Végétarien" }]);
+    const viande = (ref: string): RecetteEntree => ({
+      ...recette(ref),
+      detectionProprietes: { proprietes: ["VIANDE"], ingredientsNonReconnus: [] },
+    });
+    const res = resoudre([viande("v0"), viande("v1"), viande("v2"), recette("ok")], c, []);
+    expect(res.ok).toBe(false);
+    if (!res.ok) {
+      expect(res.contraintesBloquantes[0]).toMatchObject({
+        type: "REGIME_ALIMENTAIRE",
+        cle: "VIANDE",
+        libelle: "viande",
+        recettesBloquees: 3,
+      });
     }
   });
 });

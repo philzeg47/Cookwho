@@ -3,7 +3,8 @@
 // 3 à 10 recettes. Le cas « pas assez » est renvoyé tel quel (la dégradation
 // 4.5 et l'échec 4.6 le raffineront). Result discriminé, jamais d'exception.
 
-import { type AllergeneUE, LIBELLES_ALLERGENES, type ResultatDetection } from "../allergenes";
+import { LIBELLES_ALLERGENES, type ResultatDetection } from "../allergenes";
+import type { ResultatProprietes } from "../regimes";
 import { type Contraintes, mur } from "./mur";
 import { curseur, genants, type NonAime } from "./curseur";
 
@@ -11,7 +12,8 @@ export type RecetteEntree = {
   ref: string;
   titre: string;
   ingredients: string[]; // lignes d'ingrédients (texte libre)
-  detection: ResultatDetection; // pré-calculée par l'appelant (4.4b)
+  detection: ResultatDetection; // allergènes pré-calculés par l'appelant (4.4b)
+  detectionProprietes?: ResultatProprietes; // propriétés régime (4.3b, optionnel)
 };
 
 export type RecetteRetenue = {
@@ -39,8 +41,9 @@ export type ModeResolution = "TOUS_CONTENTS" | "DEGRADATION";
  * compter pour plusieurs contraintes).
  */
 export type ContrainteBloquante = {
-  type: "ALLERGIE" | "REGIME";
-  allergene: AllergeneUE;
+  type: "ALLERGIE" | "REGIME" | "REGIME_ALIMENTAIRE";
+  /** Clé machine : code allergène (ex. "ARACHIDES") ou propriété (ex. "VIANDE"). */
+  cle: string;
   libelle: string;
   recettesBloquees: number;
 };
@@ -75,26 +78,32 @@ export function resoudre(
   const plafond = Math.max(min, max);
   const exclus = new Set(exclure);
 
-  // Diagnostic d'échec (4.6) : par code, type (provenance) + nb de recettes
-  // bloquées au mur. Seules les exclusions DU MUR comptent (pas `exclure`).
+  // Diagnostic d'échec (4.6) : par clé (allergène ou propriété), type + libellé
+  // + nb de recettes bloquées au mur. Seules les exclusions DU MUR comptent.
   const blocages = new Map<
-    AllergeneUE,
-    { type: "ALLERGIE" | "REGIME"; recettesBloquees: number }
+    string,
+    { type: ContrainteBloquante["type"]; libelle: string; recettesBloquees: number }
   >();
 
   const compatibles: RecetteRetenue[] = [];
   for (const r of recettes) {
     if (exclus.has(r.ref)) continue;
-    const verdict = mur(contraintes, r.detection);
+    const verdict = mur(contraintes, r.detection, r.detectionProprietes);
     if (verdict.exclu) {
       // Une recette compte une fois par contrainte qui l'a bloquée.
-      const codesVus = new Set<AllergeneUE>();
+      const clesVues = new Set<string>();
       for (const raison of verdict.raisons) {
-        if (codesVus.has(raison.allergene)) continue;
-        codesVus.add(raison.allergene);
-        const existant = blocages.get(raison.allergene);
+        const cle =
+          raison.type === "REGIME_ALIMENTAIRE" ? raison.propriete : raison.allergene;
+        if (clesVues.has(cle)) continue;
+        clesVues.add(cle);
+        const libelle =
+          raison.type === "REGIME_ALIMENTAIRE"
+            ? raison.libelle
+            : LIBELLES_ALLERGENES[raison.allergene];
+        const existant = blocages.get(cle);
         if (existant) existant.recettesBloquees += 1;
-        else blocages.set(raison.allergene, { type: raison.type, recettesBloquees: 1 });
+        else blocages.set(cle, { type: raison.type, libelle, recettesBloquees: 1 });
       }
       continue; // sécurité : jamais retenu
     }
@@ -119,10 +128,10 @@ export function resoudre(
   // petit sans exclusion → liste vide (l'UI distingue les deux cas).
   if (compatibles.length < min) {
     const contraintesBloquantes: ContrainteBloquante[] = [...blocages.entries()]
-      .map(([allergene, { type, recettesBloquees }]) => ({
+      .map(([cle, { type, libelle, recettesBloquees }]) => ({
         type,
-        allergene,
-        libelle: LIBELLES_ALLERGENES[allergene],
+        cle,
+        libelle,
         recettesBloquees,
       }))
       .sort(

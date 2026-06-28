@@ -32,6 +32,10 @@
 - **[Low]** Pluriels irréguliers `-al`→`-aux` non transformés par `tokenCorrespond` (aucune clé concernée actuellement ; à couvrir si une clé future l'exige, ex. `corail`/`coraux`).
 - **[Low → post-V1]** Complétude exhaustive du dictionnaire = **curation continue**. Le dictionnaire maison est volontairement non-exhaustif (stories 4.0/4.1b). Piste d'enrichissement tracé hors-ligne via Open Food Facts (architecture, différé).
 
+## Deferred from: story 4.3b (régimes alimentaires) (2026-06-28)
+
+- **[Med → post-V1]** **Halal / Casher par propriétés** : différés (décision produit 2026-06-28). On ne peut pas certifier l'abattage/la préparation depuis une liste d'ingrédients ; seules des violations claires sont détectables (porc, alcool ; crustacés/mollusques pour casher). Restent traités en **incertitude** (« régime non évalué ») par le mur — aucune exclusion ni prétention de conformité. Évolution possible : détecter porc/alcool/fruits de mer pour **exclure le clair** + marquer « incertain » sur la certification. Prérequis : 4.3b (dico propriétés) livré.
+
 ## Deferred from: code review of moteur de génération (stories 4.2 → 4.4b) (2026-06-27)
 
 > Revue combinée. Invariant de sécurité OK (aucune recette violant le mur retenue), 27/27 ACs satisfaits. 6 patches de correction appliqués. Reports ci-dessous = à traiter quand le contexte l'exige.

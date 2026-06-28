@@ -8,6 +8,7 @@ import { TRPCError } from "@trpc/server";
 import {
   construireContraintes,
   detect,
+  detecterProprietes,
   type NonAime,
   type ResultatResolution,
   resoudre,
@@ -116,12 +117,14 @@ export async function genererPourRepas(
   // Récupération via source/cache (fetch-through + résilience, 4.2).
   const recettes = await recupererRecettes(db, source, { requete, limite });
 
-  // Pipeline : normalisation + détection des allergènes AVANT /core resoudre.
+  // Pipeline : détection des allergènes (4.1b) + des propriétés régime (4.3b)
+  // AVANT /core resoudre.
   const entrees = recettes.map((r) => ({
     ref: r.sourceRef,
     titre: r.titre,
     ingredients: r.ingredientsTexte,
     detection: detect(r.ingredientsTexte),
+    detectionProprietes: detecterProprietes(r.ingredientsTexte),
   }));
 
   const resolution = resoudre(entrees, contraintes, nonAimes, { exclure });

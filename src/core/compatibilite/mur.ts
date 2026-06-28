@@ -15,19 +15,34 @@ import {
   LIBELLES_ALLERGENES,
   type ResultatDetection,
 } from "../allergenes";
+import {
+  LIBELLES_PROPRIETES,
+  type ProprieteAlimentaire,
+  REGIMES_VERS_PROPRIETES,
+  type ResultatProprietes,
+} from "../regimes";
 
 export type Contraintes = {
   /** Allergènes durs à exclure (codes) : allergies déclarées + régimes-allergènes. */
   allergenesInterdits: AllergeneUE[];
   /** Sous-ensemble venant d'une ALLERGIE déclarée (pour étiqueter la raison). */
   allergiesCodes?: AllergeneUE[];
+  /** Propriétés interdites par un régime alimentaire (viande, porc… story 4.3b). */
+  proprietesInterdites?: ProprieteAlimentaire[];
+  /** Vrai si ≥1 régime alimentaire est déclaré (pilote l'incertitude régime). */
+  regimesAlimentaires?: boolean;
   /** Ce que le mur ne peut PAS garantir → incertitude signalée (jamais ignoré). */
   incertitudes: string[];
 };
 
-export type RaisonExclusion = {
-  type: "ALLERGIE" | "REGIME";
-  allergene: AllergeneUE;
+export type RaisonExclusion =
+  | { type: "ALLERGIE" | "REGIME"; allergene: AllergeneUE }
+  | { type: "REGIME_ALIMENTAIRE"; propriete: ProprieteAlimentaire; libelle: string };
+
+/** Détection vide par défaut (rétro-compatibilité du mur sans régime alimentaire). */
+const PROPRIETES_VIDE: ResultatProprietes = {
+  proprietes: [],
+  ingredientsNonReconnus: [],
 };
 
 export type VerdictMur =
@@ -62,6 +77,7 @@ export function construireContraintes(
 ): Contraintes {
   const interdits = new Set<AllergeneUE>();
   const allergies = new Set<AllergeneUE>();
+  const proprietesInterdites = new Set<ProprieteAlimentaire>();
   const incertitudes: string[] = [];
 
   for (const r of restrictions) {
@@ -76,9 +92,18 @@ export function construireContraintes(
         allergies.add(code);
       } else incertitudes.push(`allergie non vérifiable : ${valeur}`);
     } else if (r.type === "REGIME") {
-      const code = REGIMES_VERS_ALLERGENE[cle];
-      if (code) interdits.add(code);
-      else incertitudes.push(`régime non évalué : ${valeur}`);
+      const codeAllergene = REGIMES_VERS_ALLERGENE[cle];
+      const props = REGIMES_VERS_PROPRIETES[cle];
+      if (codeAllergene) {
+        // Régime-allergène (sans gluten/lactose) : géré via les allergènes (4.3).
+        interdits.add(codeAllergene);
+      } else if (props) {
+        // Régime alimentaire (végétarien/vegan/pescétarien/sans porc, 4.3b).
+        for (const p of props) proprietesInterdites.add(p);
+      } else {
+        // Halal/Casher/inconnu → incertitude (jamais prétendu conforme).
+        incertitudes.push(`régime non évalué : ${valeur}`);
+      }
     }
     // NON_AIME → ignoré (curseur, 4.4).
   }
@@ -86,6 +111,8 @@ export function construireContraintes(
   return {
     allergenesInterdits: [...interdits],
     allergiesCodes: [...allergies],
+    proprietesInterdites: [...proprietesInterdites],
+    regimesAlimentaires: proprietesInterdites.size > 0,
     incertitudes,
   };
 }
@@ -97,6 +124,7 @@ export function construireContraintes(
 export function mur(
   contraintes: Contraintes,
   detection: ResultatDetection,
+  proprietes: ResultatProprietes = PROPRIETES_VIDE,
 ): VerdictMur {
   const interdits = new Set(contraintes.allergenesInterdits);
   // Étiquette : ALLERGIE si le code vient d'une allergie déclarée, sinon REGIME.
@@ -111,12 +139,30 @@ export function mur(
       allergene,
     }));
 
+  // Régime alimentaire (4.3b) : exclure sur propriété interdite détectée.
+  const proprietesInterdites = new Set(contraintes.proprietesInterdites ?? []);
+  for (const propriete of proprietes.proprietes) {
+    if (proprietesInterdites.has(propriete)) {
+      raisons.push({
+        type: "REGIME_ALIMENTAIRE",
+        propriete,
+        libelle: LIBELLES_PROPRIETES[propriete],
+      });
+    }
+  }
+
   if (raisons.length > 0) return { exclu: true, raisons };
 
   const raisonsIncertitude = [...contraintes.incertitudes];
   if (detection.ingredientsNonReconnus.length > 0) {
     raisonsIncertitude.push(
       `ingrédient(s) non reconnu(s) : ${detection.ingredientsNonReconnus.join(", ")}`,
+    );
+  }
+  // Régime alimentaire déclaré + ingrédient non classé → incertain (3 états).
+  if (contraintes.regimesAlimentaires && proprietes.ingredientsNonReconnus.length > 0) {
+    raisonsIncertitude.push(
+      `ingrédient(s) non classé(s) pour le régime : ${proprietes.ingredientsNonReconnus.join(", ")}`,
     );
   }
 
