@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-06-19
-last_updated: 2026-06-22  # stories 1.3/1.4/1.5 → done (revue de code)
+last_updated: 2026-06-25  # Epic 2 → done (revue complète)
 project: CookWho
 project_key: NOKEY
 tracking_system: file-system
@@ -52,12 +52,12 @@ development_status:
   epic-1-retrospective: done
 
   # Epic 2 : Créer un repas & inviter
-  epic-2: backlog
-  2-1-creer-un-repas: backlog
-  2-2-ajouter-des-participants: backlog
-  2-3-generer-diffuser-les-invitations: backlog
-  2-4-suivre-l-etat-des-reponses: backlog
-  2-5-purge-planifiee-des-repas-expires: backlog
+  epic-2: done
+  2-1-creer-un-repas: done
+  2-2-ajouter-des-participants: done
+  2-3-generer-diffuser-les-invitations: done
+  2-4-suivre-l-etat-des-reponses: done
+  2-5-purge-planifiee-des-repas-expires: done
   epic-2-retrospective: optional
 
   # Epic 3 : Le participant déclare ses contraintes

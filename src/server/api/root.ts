@@ -1,3 +1,4 @@
+import { organisateurRouter } from "~/server/api/routers/organisateur";
 import {
   createCallerFactory,
   createTRPCRouter,
@@ -8,11 +9,11 @@ import {
  * This is the primary router for your server.
  *
  * All routers added in /api/routers should be manually added here.
- * Les routers métier (`organisateur`, `participant`) seront ajoutés aux Epics 2+.
- * `health` garde une API non vide et typée en attendant.
+ * `health` garde une procédure publique de vérification ; `participant` viendra à l'Epic 3.
  */
 export const appRouter = createTRPCRouter({
   health: publicProcedure.query(() => ({ ok: true })),
+  organisateur: organisateurRouter,
 });
 
 // export type definition of API
