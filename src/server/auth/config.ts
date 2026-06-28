@@ -1,7 +1,8 @@
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { type DefaultSession, type NextAuthConfig } from "next-auth";
-import DiscordProvider from "next-auth/providers/discord";
+import Resend from "next-auth/providers/resend";
 
+import { env } from "~/env";
 import { db } from "~/server/db";
 
 /**
@@ -26,24 +27,45 @@ declare module "next-auth" {
 }
 
 /**
- * Options for NextAuth.js used to configure adapters, providers, callbacks, etc.
+ * Configuration NextAuth.js (Auth.js v5) pour CookWho.
  *
- * @see https://next-auth.js.org/configuration/options
+ * Connexion organisateur par LIEN MAGIQUE (sans mot de passe) via le provider
+ * Resend. Le modèle Auth.js `User` représente l'organisateur en V1.
+ * Le magic link s'appuie sur l'adapter Prisma (table `VerificationToken`) ;
+ * la stratégie de session reste donc `database` (défaut avec adapter — ne pas
+ * la forcer en `jwt`).
+ *
+ * @see https://authjs.dev/getting-started/authentication/email
  */
 export const authConfig = {
   providers: [
-    DiscordProvider,
-    /**
-     * ...add more providers here.
-     *
-     * Most other providers require a bit more work than the Discord provider. For example, the
-     * GitHub provider requires you to add the `refresh_token_expires_in` field to the Account
-     * model. Refer to the NextAuth.js docs for the provider you want to use. Example:
-     *
-     * @see https://next-auth.js.org/providers/github
-     */
+    Resend({
+      apiKey: env.AUTH_RESEND_KEY,
+      from: env.EMAIL_FROM,
+      /**
+       * Fallback de développement : on logge le lien magique dans la console
+       * serveur au lieu d'appeler Resend, pour pouvoir tester sans clé API ni
+       * envoi réel. STRICTEMENT borné au hors-production (NFR6 : pas de donnée
+       * sensible en log en prod).
+       */
+      ...(env.NODE_ENV === "development" && {
+        sendVerificationRequest({
+          identifier,
+          url,
+        }: {
+          identifier: string;
+          url: string;
+        }) {
+          console.log(`\n🔗 Lien magique pour ${identifier} :\n${url}\n`);
+        },
+      }),
+    }),
   ],
   adapter: PrismaAdapter(db),
+  pages: {
+    signIn: "/connexion",
+    verifyRequest: "/connexion/verifier",
+  },
   callbacks: {
     session: ({ session, user }) => ({
       ...session,
