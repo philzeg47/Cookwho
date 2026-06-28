@@ -7,8 +7,10 @@ export type {
 } from "./mur";
 export { construireContraintes, mur } from "./mur";
 export type { NonAime } from "./curseur";
-export { curseur, SEUIL_TOLERANCE_MAX } from "./curseur";
+export { curseur, genants, SEUIL_TOLERANCE_MAX } from "./curseur";
 export type {
+  ContrainteBloquante,
+  ModeResolution,
   OptionsResolution,
   RecetteEntree,
   RecetteRetenue,

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import type { ResultatDetection } from "../allergenes";
+import { type AllergeneUE, LIBELLES_ALLERGENES, type ResultatDetection } from "../allergenes";
 import { construireContraintes } from "./mur";
 import { type RecetteEntree, resoudre } from "./resoudre";
 
@@ -23,9 +23,14 @@ describe("resoudre — chemin nominal", () => {
     }
   });
 
-  it("renvoie PAS_ASSEZ quand < 3 compatibles", () => {
+  it("renvoie PAS_ASSEZ quand < 3 compatibles (pool trop petit → aucune contrainte bloquante)", () => {
     const res = resoudre([recette("r0"), recette("r1")], sansContrainte, []);
-    expect(res).toEqual({ ok: false, raison: "PAS_ASSEZ", compatibles: 2 });
+    expect(res).toEqual({
+      ok: false,
+      raison: "PAS_ASSEZ",
+      compatibles: 2,
+      contraintesBloquantes: [],
+    });
   });
 
   it("EXCLUT les recettes violant le mur (jamais retenues)", () => {
@@ -68,6 +73,37 @@ describe("resoudre — chemin nominal", () => {
       for (const r of seconde.recettes) expect(vues).not.toContain(r.ref);
     } else {
       expect(seconde.raison).toBe("PAS_ASSEZ");
+    }
+  });
+
+  it("mode TOUS_CONTENTS quand ≥ 3 recettes plaisent à tout le groupe (pénalité 0)", () => {
+    const recettes = Array.from({ length: 4 }, (_, i) => recette(`r${i}`, { ingredients: ["riz"] }));
+    const res = resoudre(recettes, sansContrainte, [{ valeur: "Champignons", seuilTolerance: 0 }]);
+    expect(res.ok).toBe(true);
+    if (res.ok) {
+      expect(res.mode).toBe("TOUS_CONTENTS");
+      for (const r of res.recettes) {
+        expect(r.penalite).toBe(0);
+        expect(r.ingredientsGenants).toEqual([]);
+      }
+    }
+  });
+
+  it("mode DEGRADATION quand aucun lot de 3 n'a une pénalité nulle", () => {
+    // 3 recettes contenant toutes le non-aimé → aucune à pénalité 0.
+    const recettes = Array.from({ length: 3 }, (_, i) =>
+      recette(`r${i}`, { ingredients: ["champignons", `garniture${i}`] }),
+    );
+    const res = resoudre(recettes, sansContrainte, [{ valeur: "Champignons", seuilTolerance: 0 }]);
+    expect(res.ok).toBe(true);
+    if (res.ok) {
+      expect(res.mode).toBe("DEGRADATION");
+      expect(res.recettes.length).toBeGreaterThanOrEqual(3);
+      // Ingrédients gênants signalés sur les recettes froissées.
+      for (const r of res.recettes) {
+        expect(r.penalite).toBeGreaterThan(0);
+        expect(r.ingredientsGenants).toContain("Champignons");
+      }
     }
   });
 
@@ -117,6 +153,99 @@ describe("INVARIANT de sécurité (AC6)", () => {
           expect(inter).toEqual([]);
         }
       }
+    }
+  });
+
+  it("en mode DEGRADATION, aucune recette retenue ne franchit le mur (AC4)", () => {
+    const c = construireContraintes([{ type: "ALLERGIE", valeur: "Arachides" }]);
+    const interdits = c.allergenesInterdits;
+    // Mélange : recettes dangereuses + recettes saines qui froissent TOUTES le
+    // goût (champignons) → force la dégradation tout en testant la sécurité.
+    const recettes: RecetteEntree[] = [];
+    for (let i = 0; i < 12; i++) {
+      const danger = i % 2 === 0;
+      recettes.push(
+        recette(`r${i}`, {
+          ingredients: ["champignons", `g${i}`],
+          detection: {
+            allergenes: danger ? ["ARACHIDES"] : [],
+            ingredientsNonReconnus: [],
+          },
+        }),
+      );
+    }
+    const res = resoudre(recettes, c, [{ valeur: "Champignons", seuilTolerance: 0 }]);
+    expect(res.ok).toBe(true);
+    if (res.ok) {
+      expect(res.mode).toBe("DEGRADATION");
+      const refsRetenues = new Set(res.recettes.map((r) => r.ref));
+      for (const r of recettes) {
+        if (refsRetenues.has(r.ref)) {
+          expect(r.detection.allergenes.filter((a) => interdits.includes(a))).toEqual([]);
+        }
+      }
+    }
+  });
+});
+
+describe("échec explicatif (4.6)", () => {
+  const danger = (ref: string, allergenes: AllergeneUE[]): RecetteEntree =>
+    recette(ref, { detection: { allergenes, ingredientsNonReconnus: [] } });
+
+  it("nomme l'allergène bloquant avec son type, libellé FR et compte", () => {
+    const c = construireContraintes([{ type: "ALLERGIE", valeur: "Arachides" }]);
+    const res = resoudre(
+      [danger("d0", ["ARACHIDES"]), danger("d1", ["ARACHIDES"]), danger("d2", ["ARACHIDES"]), recette("ok")],
+      c,
+      [],
+    );
+    expect(res.ok).toBe(false);
+    if (!res.ok) {
+      expect(res.contraintesBloquantes).toEqual([
+        {
+          type: "ALLERGIE",
+          allergene: "ARACHIDES",
+          libelle: LIBELLES_ALLERGENES.ARACHIDES,
+          recettesBloquees: 3,
+        },
+      ]);
+    }
+  });
+
+  it("trie les contraintes par impact décroissant (la plus bloquante en tête)", () => {
+    const c = construireContraintes([
+      { type: "ALLERGIE", valeur: "Arachides" },
+      { type: "ALLERGIE", valeur: "Moutarde" },
+    ]);
+    const res = resoudre(
+      [
+        danger("a0", ["ARACHIDES"]),
+        danger("a1", ["ARACHIDES"]),
+        danger("a2", ["ARACHIDES"]),
+        danger("m0", ["MOUTARDE"]),
+        recette("ok"),
+      ],
+      c,
+      [],
+    );
+    expect(res.ok).toBe(false);
+    if (!res.ok) {
+      expect(res.contraintesBloquantes.map((x) => x.allergene)).toEqual(["ARACHIDES", "MOUTARDE"]);
+      expect(res.contraintesBloquantes[0]!.recettesBloquees).toBe(3);
+      expect(res.contraintesBloquantes[1]!.recettesBloquees).toBe(1);
+    }
+  });
+
+  it("étiquette une contrainte de régime-allergène comme REGIME", () => {
+    const c = construireContraintes([{ type: "REGIME", valeur: "Sans gluten" }]);
+    const res = resoudre(
+      [danger("g0", ["GLUTEN"]), danger("g1", ["GLUTEN"]), danger("g2", ["GLUTEN"]), recette("ok")],
+      c,
+      [],
+    );
+    expect(res.ok).toBe(false);
+    if (!res.ok) {
+      expect(res.contraintesBloquantes[0]).toMatchObject({ type: "REGIME", allergene: "GLUTEN" });
     }
   });
 });

@@ -21,6 +21,8 @@ export type {
   RaisonExclusion,
   VerdictMur,
   NonAime,
+  ContrainteBloquante,
+  ModeResolution,
   OptionsResolution,
   RecetteEntree,
   RecetteRetenue,
@@ -30,6 +32,7 @@ export {
   construireContraintes,
   mur,
   curseur,
+  genants,
   SEUIL_TOLERANCE_MAX,
   resoudre,
 } from "./compatibilite";

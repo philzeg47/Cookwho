@@ -38,3 +38,28 @@ export function curseur(ingredients: string[], nonAimes: NonAime[]): number {
   }
   return penalite;
 }
+
+/**
+ * Liste des aliments non-aimés du groupe PRÉSENTS dans la recette (valeurs
+ * d'origine), pour signaler les « ingrédients gênants » en dégradation (4.5).
+ * Même mécanique de match que `curseur` (par ligne, tokens). Dédupliqué par
+ * valeur, ordre stable (premier d'apparition dans `nonAimes`). Déterministe.
+ */
+export function genants(ingredients: string[], nonAimes: NonAime[]): string[] {
+  const lignesTokenisees = ingredients.map((ligne) => tokeniser(ligne));
+  const presents: string[] = [];
+  const vus = new Set<string>();
+  for (const na of nonAimes) {
+    if (vus.has(na.valeur)) continue;
+    const cible = tokeniser(na.valeur);
+    if (cible.length === 0) continue;
+    const present = lignesTokenisees.some((tokens) =>
+      contientTokens(tokens, cible),
+    );
+    if (present) {
+      presents.push(na.valeur);
+      vus.add(na.valeur);
+    }
+  }
+  return presents;
+}
