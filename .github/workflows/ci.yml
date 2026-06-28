@@ -5,6 +5,11 @@ on:
     branches: [main]
   pull_request:
 
+# Annule un run précédent encore en cours sur la même réf (économise des minutes).
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   quality:
     runs-on: ubuntu-latest
@@ -21,4 +26,5 @@ jobs:
       - run: npm run build
         env:
           SKIP_ENV_VALIDATION: "1"
-        # Le gate du corpus d'or sécurité (zéro faux négatif) sera ajouté avec l'Epic 4.
+        # Le gate du corpus d'or sécurité (zéro faux négatif allergène/régime)
+        # tourne dans `npm run test` (Epic 4) : un faux négatif fait échouer le CI.
