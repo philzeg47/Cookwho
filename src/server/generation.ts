@@ -59,6 +59,8 @@ export type OptionsGeneration = {
  *    pas forcé → on NE génère PAS (pas d'appel source), on liste les non-couverts.
  *  - GENERE : génération faite. `force` est vrai si elle a ignoré des manquants
  *    (`nonCouverts` les nomme, pour l'avertissement). Le mur n'est jamais affaibli.
+ *    `genantsParConvive` (5.2) : aliment non-aimé → prénoms des répondants qui
+ *    l'ont déclaré, pour signaler « qui » est gêné par une recette dégradée.
  */
 export type ResultatGeneration =
   | { statut: "ATTENTE_REPONSES"; nonCouverts: string[] }
@@ -67,6 +69,7 @@ export type ResultatGeneration =
       force: boolean;
       nonCouverts: string[];
       resolution: ResultatResolution;
+      genantsParConvive: Record<string, string[]>;
     };
 
 export async function genererPourRepas(
@@ -128,5 +131,24 @@ export async function genererPourRepas(
   }));
 
   const resolution = resoudre(entrees, contraintes, nonAimes, { exclure });
-  return { statut: "GENERE", force: nonCouverts.length > 0, nonCouverts, resolution };
+
+  // Attribution « qui est gêné » (5.2) : non-aimé (valeur) → prénoms des
+  // répondants l'ayant déclaré. L'UI résout les `ingredientsGenants` d'une
+  // recette via ce mapping. `/core` reste inchangé.
+  const genantsParConvive: Record<string, string[]> = {};
+  for (const p of repas.participants) {
+    if (p.statut !== "REPONDU") continue;
+    for (const r of p.restrictions) {
+      if (r.type !== "NON_AIME") continue;
+      (genantsParConvive[r.valeur] ??= []).push(p.prenom);
+    }
+  }
+
+  return {
+    statut: "GENERE",
+    force: nonCouverts.length > 0,
+    nonCouverts,
+    resolution,
+    genantsParConvive,
+  };
 }

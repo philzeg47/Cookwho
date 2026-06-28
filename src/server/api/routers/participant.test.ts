@@ -200,3 +200,18 @@ describe("participantRouter.enregistrerRestrictions", () => {
     expect(m.$transaction).not.toHaveBeenCalled();
   });
 });
+
+describe("NFR5 — frontière étanche (participant ⊄ recettes/plat)", () => {
+  it("aucune procédure participant n'expose recettes ni plat retenu", () => {
+    const procedures = (
+      appRouter as unknown as { _def: { procedures: Record<string, unknown> } }
+    )._def.procedures;
+    const participantCles = Object.keys(procedures).filter((k) =>
+      k.startsWith("participant."),
+    );
+    expect(participantCles.length).toBeGreaterThan(0); // garde-fou : on inspecte bien le bon router
+    for (const cle of participantCles) {
+      expect(cle).not.toMatch(/recette|recipe|plat|generer|retenir/i);
+    }
+  });
+});

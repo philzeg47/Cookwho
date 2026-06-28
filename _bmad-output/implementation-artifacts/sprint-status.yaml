@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-06-19
-last_updated: 2026-06-28  # revue 4.3b → done — EPIC 4 COMPLET
+last_updated: 2026-06-28  # story 5.2 ingrédients gênants → review
 project: CookWho
 project_key: NOKEY
 tracking_system: file-system
@@ -91,9 +91,9 @@ development_status:
   epic-4-retrospective: optional
 
   # Epic 5 : Présentation & choix du plat
-  epic-5: backlog
-  5-1-consulter-la-liste-choisir-un-plat: backlog
-  5-2-signalement-des-ingredients-genants: backlog
+  epic-5: in-progress
+  5-1-consulter-la-liste-choisir-un-plat: review
+  5-2-signalement-des-ingredients-genants: review
   5-3-avertissement-allergie-validation: backlog
   5-4-etat-de-generation-en-cours: backlog
   epic-5-retrospective: optional

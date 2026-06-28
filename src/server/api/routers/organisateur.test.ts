@@ -359,3 +359,42 @@ describe("organisateurRouter — genererRecettes", () => {
     expect(findMany).not.toHaveBeenCalled(); // court-circuit avant la source/cache
   });
 });
+
+describe("organisateurRouter — retenirPlat", () => {
+  it("refuse un repas non possédé (NOT_FOUND, pas d'écriture)", async () => {
+    const updateMany = vi.fn().mockResolvedValue({ count: 0 });
+    const db = { repas: { updateMany } };
+    await expect(
+      caller({ user: { id: "orga-1" } }, db).organisateur.retenirPlat({
+        repasId: "repas-autrui",
+        ref: "u1",
+        titre: "Tajine",
+      }),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+    expect(updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "repas-autrui", organisateurId: "orga-1" },
+      }),
+    );
+  });
+
+  it("persiste ref + titre pour un repas possédé", async () => {
+    const updateMany = vi.fn().mockResolvedValue({ count: 1 });
+    const db = { repas: { updateMany } };
+    const res = await caller({ user: { id: "orga-9" } }, db).organisateur.retenirPlat({
+      repasId: "repas-1",
+      ref: "https://marmiton/u1",
+      titre: "Tajine de légumes",
+    });
+    expect(res).toEqual({ ok: true });
+    const arg = updateMany.mock.calls[0]![0] as {
+      where: { id: string; organisateurId: string };
+      data: { platRetenuRef: string; platRetenuTitre: string };
+    };
+    expect(arg.where).toEqual({ id: "repas-1", organisateurId: "orga-9" });
+    expect(arg.data).toEqual({
+      platRetenuRef: "https://marmiton/u1",
+      platRetenuTitre: "Tajine de légumes",
+    });
+  });
+});

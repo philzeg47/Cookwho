@@ -17,6 +17,8 @@ describe("RepasListe", () => {
             heure: "12:30",
             createdAt: date,
             expiresAt: date,
+            platRetenuRef: null,
+            platRetenuTitre: null,
           },
         ]}
       />,

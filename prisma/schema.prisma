@@ -65,6 +65,10 @@ model Repas {
     createdAt      DateTime @default(now())
     expiresAt      DateTime // garde-fou RGPD (purge planifiée — story 2.5)
 
+    // Plat retenu par l'organisateur (story 5.1). Réservé organisateur (NFR5).
+    platRetenuRef   String? // sourceRef de la recette choisie
+    platRetenuTitre String?
+
     participants Participant[]
 
     @@index([organisateurId])
