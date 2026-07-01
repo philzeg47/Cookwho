@@ -9,7 +9,7 @@
 [![Statut](https://img.shields.io/badge/statut-MVP%20en%20ligne-brightgreen)](https://cookwho.fr)
 [![Site](https://img.shields.io/badge/site-cookwho.fr-blue)](https://cookwho.fr)
 [![Tests](https://img.shields.io/badge/tests-287%20passants-brightgreen)](#-tests--qualité)
-[![Licence](https://img.shields.io/badge/licence-à%20définir-lightgrey)](#-licence)
+[![Licence](https://img.shields.io/badge/licence-MIT-green)](LICENSE)
 
 </div>
 
@@ -202,4 +202,6 @@ src/
 
 ## 📄 Licence
 
-> _Licence à définir (ex. MIT). Tant qu'aucune licence n'est précisée, tous droits réservés._
+Distribué sous licence **MIT** — voir [`LICENSE`](LICENSE).
+
+En résumé : usage, modification et redistribution **libres** (y compris à des fins commerciales), à condition de conserver la notice de copyright. Le logiciel est fourni « tel quel », sans garantie.
