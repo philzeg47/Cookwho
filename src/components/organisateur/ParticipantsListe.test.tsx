@@ -39,6 +39,7 @@ const baseParticipant = {
   prenom: "Léa",
   email: null,
   accessToken: "tok",
+  estOrganisateur: false,
   statut: "EN_ATTENTE" as const,
   createdAt: new Date(),
   updatedAt: new Date(),

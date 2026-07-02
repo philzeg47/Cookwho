@@ -70,7 +70,7 @@ type RestrictionPayload = {
  * Trim + rejet du vide + déduplication par (type, valeur) côté client
  * (évite les aller-retours Zod et les lignes en double).
  */
-function versRestrictions(donnees: DonneesRestrictions) {
+export function versRestrictions(donnees: DonneesRestrictions) {
   const restrictions: RestrictionPayload[] = [];
   const vues = new Set<string>();
 

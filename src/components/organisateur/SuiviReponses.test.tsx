@@ -12,6 +12,7 @@ function participant(id: string, statut: Statut) {
     prenom: `P-${id}`,
     email: null,
     accessToken: `tok-${id}`,
+    estOrganisateur: false,
     statut,
     createdAt: new Date(),
     updatedAt: new Date(),

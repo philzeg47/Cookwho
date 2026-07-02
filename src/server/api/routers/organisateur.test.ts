@@ -422,3 +422,67 @@ describe("organisateurRouter — retirerParticipant", () => {
     expect(res).toEqual({ ok: true });
   });
 });
+
+function dbMesRestrictions(repasExiste: boolean, orgaExiste: boolean) {
+  const deleteMany = vi.fn().mockResolvedValue({ count: 0 });
+  const createMany = vi.fn().mockResolvedValue({ count: 0 });
+  const update = vi.fn().mockResolvedValue({});
+  const participantCreate = vi.fn().mockResolvedValue({ id: "orga-new" });
+  const participantFindFirst = vi
+    .fn()
+    .mockResolvedValue(orgaExiste ? { id: "orga1" } : null);
+  const repasFindFirst = vi.fn().mockResolvedValue(repasExiste ? { id: "r1" } : null);
+  const tx = { restriction: { deleteMany, createMany }, participant: { update } };
+  const $transaction = vi.fn((fn: (t: typeof tx) => Promise<unknown>) => fn(tx));
+  const db = {
+    repas: { findFirst: repasFindFirst },
+    participant: { findFirst: participantFindFirst, create: participantCreate },
+    $transaction,
+  };
+  return { db, deleteMany, createMany, update, participantCreate, $transaction };
+}
+
+describe("organisateurRouter — enregistrerMesRestrictions", () => {
+  it("refuse un repas non possédé (NOT_FOUND, pas de transaction)", async () => {
+    const m = dbMesRestrictions(false, false);
+    await expect(
+      caller({ user: { id: "o1" } }, m.db).organisateur.enregistrerMesRestrictions({
+        repasId: "x",
+        restrictions: [],
+      }),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+    expect(m.$transaction).not.toHaveBeenCalled();
+  });
+
+  it("enregistre les restrictions de l'organisateur (entrée existante → REPONDU)", async () => {
+    const m = dbMesRestrictions(true, true);
+    const res = await caller({ user: { id: "o1" } }, m.db).organisateur.enregistrerMesRestrictions({
+      repasId: "r1",
+      restrictions: [
+        { type: "REGIME", valeur: "Végétarien" },
+        { type: "NON_AIME", valeur: "Olives", seuilTolerance: 1 },
+      ],
+    });
+    expect(res).toEqual({ ok: true });
+    expect(m.participantCreate).not.toHaveBeenCalled();
+    expect(m.createMany).toHaveBeenCalled();
+    expect(m.update).toHaveBeenCalledWith({
+      where: { id: "orga1" },
+      data: { statut: "REPONDU" },
+    });
+  });
+
+  it("crée l'entrée organisateur si absente (repas ancien, prénom par défaut)", async () => {
+    const m = dbMesRestrictions(true, false);
+    await caller({ user: { id: "o1" } }, m.db).organisateur.enregistrerMesRestrictions({
+      repasId: "r1",
+      restrictions: [],
+    });
+    expect(m.participantCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        // Utilisateur lien-magique sans nom → prénom par défaut « Moi ».
+        data: expect.objectContaining({ estOrganisateur: true, prenom: "Moi" }),
+      }),
+    );
+  });
+});

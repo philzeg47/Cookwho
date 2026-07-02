@@ -72,23 +72,30 @@ export function ParticipantsListe({ participants }: { participants: Participant[
           <div className="flex items-center justify-between gap-4">
             <span>
               <span className="text-ink font-semibold">{p.prenom}</span>
-              {p.email ? (
+              {p.estOrganisateur ? (
+                <span className="text-ink-soft text-sm"> · Toi (organisateur)</span>
+              ) : p.email ? (
                 <span className="text-ink-soft text-sm"> · {p.email}</span>
               ) : null}
             </span>
             <BadgeStatut statut={p.statut} />
           </div>
-          {p.statut === "REPONDU" ? (
-            <Restrictions restrictions={p.restrictions} />
-          ) : null}
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <InvitationActions
-              participantId={p.id}
-              token={p.accessToken}
-              hasEmail={p.email !== null}
-            />
-            <RetirerParticipant participantId={p.id} prenom={p.prenom} />
-          </div>
+          {/* L'organisateur gère ses restrictions dans « Mes restrictions ». */}
+          {p.estOrganisateur ? null : (
+            <>
+              {p.statut === "REPONDU" ? (
+                <Restrictions restrictions={p.restrictions} />
+              ) : null}
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <InvitationActions
+                  participantId={p.id}
+                  token={p.accessToken}
+                  hasEmail={p.email !== null}
+                />
+                <RetirerParticipant participantId={p.id} prenom={p.prenom} />
+              </div>
+            </>
+          )}
         </li>
       ))}
     </ul>

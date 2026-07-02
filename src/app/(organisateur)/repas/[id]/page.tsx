@@ -2,6 +2,7 @@ import { TRPCError } from "@trpc/server";
 import { notFound } from "next/navigation";
 
 import { AjouterParticipantForm } from "~/components/organisateur/AjouterParticipantForm";
+import { MesRestrictions } from "~/components/organisateur/MesRestrictions";
 import { ParticipantsListe } from "~/components/organisateur/ParticipantsListe";
 import { RecettesSection } from "~/components/organisateur/RecettesSection";
 import { SuiviReponses } from "~/components/organisateur/SuiviReponses";
@@ -27,6 +28,11 @@ export default async function RepasDetailPage({
     throw error;
   }
 
+  // L'organisateur est un convive : son entrée `estOrganisateur` est séparée des
+  // invités (elle n'entre pas dans le suivi des réponses des invités).
+  const orga = repas.participants.find((p) => p.estOrganisateur) ?? null;
+  const invites = repas.participants.filter((p) => !p.estOrganisateur);
+
   return (
     <main
       id="contenu"
@@ -39,7 +45,13 @@ export default async function RepasDetailPage({
         </p>
       </header>
 
-      <SuiviReponses participants={repas.participants} />
+      <MesRestrictions
+        repasId={repas.id}
+        initiales={orga?.restrictions ?? []}
+        aRepondu={orga?.statut === "REPONDU"}
+      />
+
+      <SuiviReponses participants={invites} />
 
       <section className="flex flex-col gap-4">
         <h2 className="text-xl font-bold">Participants</h2>

@@ -86,6 +86,9 @@ model Participant {
     prenom      String
     email       String?
     accessToken String            @unique // token 256 bits (crypto) — URL /p/{token}
+    // L'organisateur est aussi un convive : son entrée est créée automatiquement
+    // (déclare ses restrictions depuis l'espace organisateur, sans lien/token).
+    estOrganisateur Boolean         @default(false)
     statut      StatutParticipant @default(EN_ATTENTE)
     createdAt   DateTime          @default(now())
     updatedAt   DateTime          @updatedAt

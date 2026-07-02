@@ -4,6 +4,7 @@ import { z } from "zod";
 import { env } from "~/env";
 import { echapperHtml } from "~/lib/html";
 import { computeExpiresAt } from "~/lib/repas";
+import { SEUIL_TOLERANCE_DEFAUT, TOLERANCE_LABELS } from "~/lib/restrictions";
 import { genererAccessToken } from "~/lib/tokens";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { envoyerEmail } from "~/server/email";
@@ -12,6 +13,25 @@ import { recettesLocales } from "~/server/sources/recettesLocales";
 
 /** Plafond de participants par repas (garde-fou anti-abus — V1). */
 const MAX_PARTICIPANTS_PAR_REPAS = 50;
+
+// Borne du seuil = dernier index de libellé (source unique, cf. participant).
+const SEUIL_TOLERANCE_MAX = TOLERANCE_LABELS.length - 1;
+
+/** Schéma d'une liste de restrictions (partagé avec le flux participant). */
+const restrictionsInput = z
+  .array(
+    z
+      .object({
+        type: z.enum(["REGIME", "ALLERGIE", "NON_AIME"]),
+        valeur: z.string().trim().min(1).max(200),
+        seuilTolerance: z.number().int().min(0).max(SEUIL_TOLERANCE_MAX).optional(),
+      })
+      .refine((r) => r.type === "NON_AIME" || r.seuilTolerance === undefined, {
+        message: "seuilTolerance réservé aux aliments non-aimés",
+        path: ["seuilTolerance"],
+      }),
+  )
+  .max(50, "Trop de restrictions.");
 
 /**
  * Router organisateur — procédures PROTÉGÉES (session requise).
@@ -37,6 +57,9 @@ export const organisateurRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      // L'organisateur est aussi un convive : on crée son entrée « participant »
+      // (estOrganisateur) en même temps, pour qu'il apparaisse dans la liste et
+      // puisse déclarer ses restrictions (elles comptent dans la génération).
       return ctx.db.repas.create({
         data: {
           lieu: input.lieu,
@@ -44,6 +67,13 @@ export const organisateurRouter = createTRPCRouter({
           heure: input.heure,
           expiresAt: computeExpiresAt(input.date),
           organisateurId: ctx.session.user.id,
+          participants: {
+            create: {
+              prenom: ctx.session.user.name ?? "Moi",
+              estOrganisateur: true,
+              accessToken: genererAccessToken(),
+            },
+          },
         },
       });
     }),
@@ -130,6 +160,64 @@ export const organisateurRouter = createTRPCRouter({
         },
       });
       if (count === 0) throw new TRPCError({ code: "NOT_FOUND" });
+      return { ok: true as const };
+    }),
+
+  /**
+   * Enregistre les restrictions de l'ORGANISATEUR pour un repas possédé (il est
+   * un convive comme les autres — ses contraintes comptent dans la génération).
+   * Trouve (ou crée pour un repas ancien) son entrée `estOrganisateur`, remplace
+   * ses restrictions et passe son statut à REPONDU. Réservé organisateur (NFR5).
+   */
+  enregistrerMesRestrictions: protectedProcedure
+    .input(z.object({ repasId: z.string(), restrictions: restrictionsInput }))
+    .mutation(async ({ ctx, input }) => {
+      const repas = await ctx.db.repas.findFirst({
+        where: { id: input.repasId, organisateurId: ctx.session.user.id },
+        select: { id: true },
+      });
+      if (!repas) throw new TRPCError({ code: "NOT_FOUND" });
+
+      // Entrée organisateur du repas (créée à la volée pour un repas ancien).
+      const existant = await ctx.db.participant.findFirst({
+        where: { repasId: repas.id, estOrganisateur: true },
+        select: { id: true },
+      });
+      const participantId =
+        existant?.id ??
+        (
+          await ctx.db.participant.create({
+            data: {
+              repasId: repas.id,
+              prenom: ctx.session.user.name ?? "Moi",
+              estOrganisateur: true,
+              accessToken: genererAccessToken(),
+            },
+            select: { id: true },
+          })
+        ).id;
+
+      await ctx.db.$transaction(async (tx) => {
+        await tx.restriction.deleteMany({ where: { participantId } });
+        if (input.restrictions.length > 0) {
+          await tx.restriction.createMany({
+            data: input.restrictions.map((r) => ({
+              participantId,
+              type: r.type,
+              valeur: r.valeur,
+              seuilTolerance:
+                r.type === "NON_AIME"
+                  ? (r.seuilTolerance ?? SEUIL_TOLERANCE_DEFAUT)
+                  : null,
+            })),
+          });
+        }
+        await tx.participant.update({
+          where: { id: participantId },
+          data: { statut: "REPONDU" },
+        });
+      });
+
       return { ok: true as const };
     }),
 
