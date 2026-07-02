@@ -8,7 +8,7 @@ import { genererAccessToken } from "~/lib/tokens";
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
 import { envoyerEmail } from "~/server/email";
 import { type DbGeneration, genererPourRepas } from "~/server/generation";
-import { marmitonSource } from "~/server/sources/marmitonSource";
+import { recettesLocales } from "~/server/sources/recettesLocales";
 
 /** Plafond de participants par repas (garde-fou anti-abus — V1). */
 const MAX_PARTICIPANTS_PAR_REPAS = 50;
@@ -158,7 +158,7 @@ export const organisateurRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       // Cast de frontière : le client Prisma fournit ces méthodes à l'exécution ;
       // TS ne peut pas prouver l'assignabilité structurelle (méthodes génériques).
-      return genererPourRepas(ctx.db as unknown as DbGeneration, marmitonSource, {
+      return genererPourRepas(ctx.db as unknown as DbGeneration, recettesLocales, {
         repasId: input.repasId,
         organisateurId: ctx.session.user.id,
         exclure: input.exclure,

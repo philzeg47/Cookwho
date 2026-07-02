@@ -2,6 +2,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { genererPourRepas } from "./generation";
+import { recettesLocales } from "./sources/recettesLocales";
 import type { RecetteBrute, SourceDeRecettes } from "./sources/SourceDeRecettes";
 
 type Restriction = {
@@ -57,6 +58,17 @@ describe("genererPourRepas", () => {
     await expect(
       genererPourRepas(m.db, sourceFactice([]), OPTS),
     ).rejects.toMatchObject({ code: "NOT_FOUND" });
+  });
+
+  it("génère des plats réels avec la source LOCALE et peu de restrictions (fix bug prod)", async () => {
+    // Un répondant sans restriction → le pool local doit suffire (≥ 3 plats).
+    const m = dbMock([repondu("Léa")]);
+    const res = await genererPourRepas(m.db, recettesLocales, OPTS);
+    expect(res.statut).toBe("GENERE");
+    if (res.statut === "GENERE") {
+      expect(res.resolution.ok).toBe(true);
+      if (res.resolution.ok) expect(res.resolution.recettes.length).toBeGreaterThanOrEqual(3);
+    }
   });
 
   it("génère (force:false, aucun non-couvert) quand tous ont répondu", async () => {

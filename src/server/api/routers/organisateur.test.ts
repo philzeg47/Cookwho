@@ -14,10 +14,6 @@ vi.mock("~/env", () => ({
   },
 }));
 vi.mock("~/server/email", () => ({ envoyerEmail: vi.fn() }));
-// Génération : neutraliser le scraper (sinon l'import charge marmiton-api/réseau).
-vi.mock("~/server/sources/marmitonSource", () => ({
-  marmitonSource: { nom: "marmiton", chercher: vi.fn(async () => []) },
-}));
 
 import { appRouter } from "~/server/api/root";
 import { envoyerEmail } from "~/server/email";
@@ -37,9 +33,11 @@ describe("organisateurRouter", () => {
     const create = vi.fn().mockResolvedValue({ id: "r1" });
     const db = { repas: { create, findMany: vi.fn() } };
 
+    // Date dynamiquement future (évite un test « bombe à retardement »).
+    const dateFuture = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
     await caller({ user: { id: "orga-1" } }, db).organisateur.creerRepas({
       lieu: "Chez Léa",
-      date: new Date(2026, 6, 1),
+      date: dateFuture,
       heure: "12:30",
     });
 
