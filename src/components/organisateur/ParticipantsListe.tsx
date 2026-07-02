@@ -1,10 +1,43 @@
 import type { inferRouterOutputs } from "@trpc/server";
 
 import { InvitationActions } from "~/components/organisateur/InvitationActions";
+import { Chip, type ChipProps } from "~/components/ui/Chip";
 import type { AppRouter } from "~/server/api/root";
 
 type Participant =
   inferRouterOutputs<AppRouter>["organisateur"]["repasDetail"]["participants"][number];
+type Restriction = Participant["restrictions"][number];
+
+/** Type de restriction → variante de puce + icône + libellé de catégorie. */
+const RESTRICTION_UI: Record<
+  Restriction["type"],
+  { variant: ChipProps["variant"]; icon: string; label: string }
+> = {
+  ALLERGIE: { variant: "allergie", icon: "⚠", label: "Allergie" },
+  REGIME: { variant: "regime", icon: "🌱", label: "Régime" },
+  NON_AIME: { variant: "non-aime", icon: "🙁", label: "N'aime pas" },
+};
+
+function Restrictions({ restrictions }: { restrictions: Restriction[] }) {
+  if (restrictions.length === 0) {
+    return <p className="text-ink-soft text-sm">Mange de tout — aucune restriction 🎉</p>;
+  }
+  return (
+    <ul className="flex flex-wrap gap-1.5">
+      {restrictions.map((r) => {
+        const ui = RESTRICTION_UI[r.type];
+        return (
+          <li key={r.id}>
+            <Chip variant={ui.variant} icon={ui.icon}>
+              <span className="sr-only">{ui.label} : </span>
+              {r.valeur}
+            </Chip>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
 
 function BadgeStatut({ statut }: { statut: Participant["statut"] }) {
   const aRepondu = statut === "REPONDU";
@@ -44,6 +77,9 @@ export function ParticipantsListe({ participants }: { participants: Participant[
             </span>
             <BadgeStatut statut={p.statut} />
           </div>
+          {p.statut === "REPONDU" ? (
+            <Restrictions restrictions={p.restrictions} />
+          ) : null}
           <InvitationActions
             participantId={p.id}
             token={p.accessToken}

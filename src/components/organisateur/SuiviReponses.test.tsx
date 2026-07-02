@@ -15,6 +15,7 @@ function participant(id: string, statut: Statut) {
     statut,
     createdAt: new Date(),
     updatedAt: new Date(),
+    restrictions: [],
   };
 }
 

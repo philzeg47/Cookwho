@@ -60,7 +60,14 @@ export const organisateurRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const repas = await ctx.db.repas.findFirst({
         where: { id: input.repasId, organisateurId: ctx.session.user.id },
-        include: { participants: { orderBy: { createdAt: "asc" } } },
+        include: {
+          participants: {
+            orderBy: { createdAt: "asc" },
+            // L'organisateur (propriétaire) voit les restrictions de ses convives
+            // — base de l'avertissement allergie (FR16). Réservé organisateur (NFR5).
+            include: { restrictions: { orderBy: { type: "asc" } } },
+          },
+        },
       });
       if (!repas) throw new TRPCError({ code: "NOT_FOUND" });
       return repas;
