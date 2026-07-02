@@ -1,6 +1,7 @@
 import type { inferRouterOutputs } from "@trpc/server";
 
 import { InvitationActions } from "~/components/organisateur/InvitationActions";
+import { RetirerParticipant } from "~/components/organisateur/RetirerParticipant";
 import { Chip, type ChipProps } from "~/components/ui/Chip";
 import type { AppRouter } from "~/server/api/root";
 
@@ -80,11 +81,14 @@ export function ParticipantsListe({ participants }: { participants: Participant[
           {p.statut === "REPONDU" ? (
             <Restrictions restrictions={p.restrictions} />
           ) : null}
-          <InvitationActions
-            participantId={p.id}
-            token={p.accessToken}
-            hasEmail={p.email !== null}
-          />
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <InvitationActions
+              participantId={p.id}
+              token={p.accessToken}
+              hasEmail={p.email !== null}
+            />
+            <RetirerParticipant participantId={p.id} prenom={p.prenom} />
+          </div>
         </li>
       ))}
     </ul>

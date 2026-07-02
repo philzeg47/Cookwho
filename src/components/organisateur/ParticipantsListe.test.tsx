@@ -1,7 +1,9 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 
-// La liste rend InvitationActions (client tRPC) — on neutralise le client.
+// La liste rend des composants client (InvitationActions, RetirerParticipant)
+// — on neutralise le client tRPC et le router.
+vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 vi.mock("~/trpc/react", () => ({
   api: {
     organisateur: {
@@ -12,6 +14,9 @@ vi.mock("~/trpc/react", () => ({
           isSuccess: false,
           isError: false,
         }),
+      },
+      retirerParticipant: {
+        useMutation: () => ({ mutate: vi.fn(), isPending: false, isError: false }),
       },
     },
   },

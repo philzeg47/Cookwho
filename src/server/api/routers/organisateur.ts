@@ -115,6 +115,24 @@ export const organisateurRouter = createTRPCRouter({
       });
     }),
 
+  /**
+   * Retire un participant d'un repas possédé. Ownership via la relation
+   * (`repas.organisateurId`) ; ses restrictions sont supprimées en cascade
+   * (schéma `onDelete: Cascade`). Réservé organisateur (NFR5).
+   */
+  retirerParticipant: protectedProcedure
+    .input(z.object({ participantId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const { count } = await ctx.db.participant.deleteMany({
+        where: {
+          id: input.participantId,
+          repas: { organisateurId: ctx.session.user.id },
+        },
+      });
+      if (count === 0) throw new TRPCError({ code: "NOT_FOUND" });
+      return { ok: true as const };
+    }),
+
   envoyerInvitation: protectedProcedure
     .input(z.object({ participantId: z.string() }))
     .mutation(async ({ ctx, input }) => {

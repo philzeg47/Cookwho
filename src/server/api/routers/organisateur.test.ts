@@ -396,3 +396,29 @@ describe("organisateurRouter — retenirPlat", () => {
     });
   });
 });
+
+describe("organisateurRouter — retirerParticipant", () => {
+  it("refuse un participant d'un repas non possédé (NOT_FOUND, pas de suppression)", async () => {
+    const deleteMany = vi.fn().mockResolvedValue({ count: 0 });
+    const db = { participant: { deleteMany } };
+    await expect(
+      caller({ user: { id: "orga-1" } }, db).organisateur.retirerParticipant({
+        participantId: "p-autrui",
+      }),
+    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+    expect(deleteMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "p-autrui", repas: { organisateurId: "orga-1" } },
+      }),
+    );
+  });
+
+  it("retire un participant d'un repas possédé", async () => {
+    const deleteMany = vi.fn().mockResolvedValue({ count: 1 });
+    const db = { participant: { deleteMany } };
+    const res = await caller({ user: { id: "orga-9" } }, db).organisateur.retirerParticipant({
+      participantId: "p1",
+    });
+    expect(res).toEqual({ ok: true });
+  });
+});
