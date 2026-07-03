@@ -114,6 +114,18 @@ Détecter les allergènes en interne et générer des plats sûrs et compatibles
 L'organisateur consulte les recettes générées, est averti en cas d'allergie, et choisit son plat.
 **FRs couvertes :** FR15, FR16 (+ frontière étanche NFR5, recipe-card/états UX-DR2/UX-DR4, validation human-in-the-loop).
 
+### Epic 6 : Identité de marque & site vitrine (V1)
+Donner à CookWho une image publique professionnelle et un point d'entrée public pour se connecter.
+
+### Epic 7 : Améliorations gestion du repas & des participants (V1 — sauf 7.1)
+Fluidifier et compléter les écrans organisateur existants (Epic 2) suite aux retours d'usage. Story 7.1 (refonte calendrier) reste en V2.
+
+### Epic 8 : Refonte du design global (V1 — périmètre réduit)
+Pass de polish ciblé sur les 5 écrans clés (accueil/vitrine, mes repas, création de repas, assistant participant, liste des recettes) — pas une refonte totale.
+
+### Epic 9 : Source de recettes durable (Wikibooks + curation) (V1)
+Remplacer le scraper Marmiton cassé par un pool de recettes statique, durable et en français, adossé à Wikibooks Cookbook FR (CC-BY-SA) complété par une curation maison, avec préparation affichée dans l'app.
+
 ## Epic 1 : Socle & accès organisateur
 
 Initialiser l'application et permettre à l'organisateur de se connecter et d'accéder à son espace.
@@ -514,6 +526,216 @@ So that l'attente ne devient pas de l'angoisse. (ajoutée suite à la revue UX �
 **When** le moteur travaille (jusqu'à quelques secondes)
 **Then** un état d'attente habillé et narratif s'affiche (ex. « On vérifie chaque assiette… »)
 **And** l'attente se résout vers l'un des états : succès, dégradation, ou échec explicatif.
+
+## Epic 6 : Identité de marque & site vitrine (V1)
+
+Donner à CookWho une image publique professionnelle et un point d'entrée public pour se connecter.
+
+### Story 6.1 : Logo CookWho
+
+As a porteur du projet,
+I want un logo CookWho,
+So that l'application a une identité visuelle reconnaissable.
+
+**Acceptance Criteria:**
+
+**Given** la palette Cocon (DESIGN.md)
+**When** le logo est intégré
+**Then** il apparaît dans le header/navbar de l'app et sur la page d'accueil
+**And** il est décliné en favicon.
+
+### Story 6.2 : Page d'accueil style site vitrine (cookwho.fr)
+
+As a visiteur non connecté,
+I want découvrir CookWho sur une page d'accueil publique,
+So that je comprends l'usage avant de me connecter. (nouvelle demande produit)
+
+**Acceptance Criteria:**
+
+**Given** l'URL racine cookwho.fr
+**When** un visiteur non connecté y accède
+**Then** il voit une page vitrine présentant CookWho (proposition de valeur, aperçu du parcours organisateur/participant)
+**And** un appel à l'action mène vers la connexion
+**And** un organisateur déjà connecté est redirigé vers « Mes repas » plutôt que la vitrine.
+
+### Story 6.3 : Bouton de connexion visible sur la page d'accueil
+
+As a visiteur,
+I want trouver facilement comment me connecter,
+So that je n'ai pas à deviner ou chercher l'URL de connexion.
+
+**Acceptance Criteria:**
+
+**Given** la page d'accueil vitrine (6.2)
+**When** je consulte le header
+**Then** un bouton « Se connecter » est visible et mène au formulaire de connexion.
+
+### Story 6.4 : Gestion de compte par email + mot de passe (organisateur et participant)
+
+As a utilisateur (organisateur ou participant),
+I want pouvoir me connecter avec un email et un mot de passe,
+So that je ne dépende pas uniquement d'un lien magique ou d'un lien d'invitation.
+
+**Acceptance Criteria:**
+
+**Given** le compte Organisateur existant (lien magique, story 1.3) et l'accès Participant existant (token d'invitation, story 3.1)
+**When** j'active la connexion par mot de passe
+**Then** un organisateur peut créer un mot de passe et se connecter par email + mot de passe (en complément du lien magique)
+**And** un participant peut, s'il le souhaite, créer un compte pour retrouver ses repas sans dépendre uniquement de son lien
+**And** les mots de passe sont stockés hashés (jamais en clair).
+
+> **Note (à trancher) :** impact sur NFR4 (lien participant non-devinable) et sur la configuration Auth.js — nécessite une décision d'architecture avant implémentation (coexistence avec le lien magique / le token d'invitation, pas de remplacement).
+
+## Epic 7 : Améliorations gestion du repas & des participants (V1 — sauf 7.1)
+
+Fluidifier et compléter les écrans organisateur existants (Epic 2) suite aux retours d'usage. Stories 7.2 à 7.5 en V1 ; 7.1 reste en V2.
+
+### Story 7.1 : Revoir le design du calendrier/horaire (V2)
+
+As an organisateur,
+I want un sélecteur de date/heure plus clair,
+So that créer un repas est agréable et sans friction. (amélioration UX de la story 2.1)
+
+**Acceptance Criteria:**
+
+**Given** l'écran de création/édition d'un repas
+**When** je choisis la date et l'heure
+**Then** le composant de calendrier/horaire suit le thème Cocon et est utilisable au clavier/tactile (cibles ≥ 44px)
+**And** la sélection reste lisible et facile sur mobile.
+
+### Story 7.2 : Affichage des participants en temps réel (sans refresh)
+
+As an organisateur,
+I want voir un participant ajouté apparaître immédiatement dans la liste,
+So that je n'ai pas besoin de recharger la page. (amélioration UX de la story 2.2)
+
+**Acceptance Criteria:**
+
+**Given** l'écran de gestion des participants d'un repas
+**When** j'ajoute un participant
+**Then** il apparaît dans la liste sans rechargement manuel de la page.
+
+### Story 7.3 : Éditer un participant (prénom, email)
+
+As an organisateur,
+I want corriger le prénom ou l'email d'un participant déjà ajouté,
+So that je peux réparer une erreur de saisie sans le supprimer puis le recréer.
+
+**Acceptance Criteria:**
+
+**Given** un participant existant dans un repas
+**When** je modifie son prénom et/ou son email et valide
+**Then** les nouvelles valeurs sont enregistrées et réaffichées
+**And** si une invitation avait déjà été envoyée à l'ancien email, je suis informé qu'il faudra la renvoyer.
+
+### Story 7.4 : Afficher le lien d'invitation complet
+
+As an organisateur,
+I want voir le lien d'invitation complet d'un participant,
+So that je peux le vérifier ou le transmettre par un autre canal que le seul bouton copier. (amélioration UX de la story 2.3)
+
+**Acceptance Criteria:**
+
+**Given** un participant avec un `accessToken` généré
+**When** je consulte sa fiche
+**Then** l'URL complète `/p/{token}` est affichée en clair, en plus du bouton « copier ».
+
+### Story 7.5 : Email de confirmation après création d'un repas
+
+As an organisateur,
+I want recevoir un email après avoir créé un repas,
+So that j'ai une trace et un rappel des informations saisies.
+
+**Acceptance Criteria:**
+
+**Given** un repas créé avec succès
+**When** la création est confirmée
+**Then** un email de confirmation est envoyé à l'organisateur (récapitulatif lieu/date/heure)
+**And** l'envoi réutilise le transport email déjà configuré (story 1.3).
+
+## Epic 8 : Refonte du design global (V1 — périmètre réduit)
+
+Auditer et retravailler le design pour un rendu plus épuré. En V1, le pass de polish est **borné aux 5 écrans clés** (accueil/vitrine, mes repas, création de repas, assistant participant, liste des recettes) — pas une refonte totale du site.
+
+### Story 8.1 : Audit et refonte du design pour un rendu plus clean
+
+As a porteur du projet,
+I want un design plus épuré sur l'ensemble du site,
+So that CookWho paraisse plus professionnel et agréable à utiliser.
+
+**Acceptance Criteria:**
+
+**Given** l'état actuel des écrans (organisateur et participant)
+**When** l'audit design est mené
+**Then** une liste des écarts par rapport à un rendu « clean » cohérent est produite (espacement, hiérarchie visuelle, cohérence des composants)
+**And** les tokens DESIGN.md sont mis à jour si nécessaire
+**And** les écrans clés (accueil, mes repas, création de repas, assistant participant, liste des recettes) sont retravaillés en conséquence.
+
+## Epic 9 : Source de recettes durable (Wikibooks + curation) (V1)
+
+Remplacer le scraper Marmiton cassé (`marmiton-api`, correctif temporaire `recettesLocales.ts` à ~50 recettes) par un pool de recettes statique, durable, en français, de 200-300 plats. Source retenue : Wikibooks Cookbook FR (fr.wikibooks.org, licence CC-BY-SA 4.0), complétée par une curation maison. La préparation (étapes) est affichée **dans l'app** (usage « devant la cuisinière »), texte intégral pour les recettes Wikibooks.
+
+> **Contexte de décision (party mode — Winston/architecte, Amelia/dev, John/PM, Sally/UX) :**
+> - **Abandon du scraping live** (fragile par nature) au profit d'un pool statique importé.
+> - **Pas d'API LLM en runtime.** Un LLM comme aide-rédaction *hors runtime* pour la curation maison est acceptable si Philippe le valide ; le contenu reste relu à la main.
+> - **Wikibooks « Plat principal » = ~110 recettes** seulement (desserts 157, soupes 57, accompagnements 45, entrées 31). Élargir aux autres catégories est recommandé (volume + variété + menus complets futurs).
+> - **Storage (position combinée retenue)** : table Postgres `RecetteSeed` (texte de préparation long, évite un gros JSON parsé au cold start Vercel, réutilise Prisma/`RecetteCache`) **+** artefact NDJSON versionné dans Git comme *input* du seed (traçabilité & revue d'attribution en diff PR).
+> - **`RecetteBrute` reste ce que `/core` consomme** (titre + `ingredientsTexte`) — la préparation et l'attribution vivent dans un type/couche présentation séparé (type `RecettePresentation`, union discriminée `{origine:'wikibooks';sourceUrl}` | `{origine:'curation-maison'}` rendant `sourceUrl` obligatoire au niveau du type pour Wikibooks).
+> - **CC-BY-SA = attribution par recette, visible sur la fiche** (crédit + licence nommée/liée + lien vers l'historique des contributeurs), pas un footer légal global.
+> - **Ordre des stories non négociable** : 9.1 (contrat d'attribution) avant 9.2 (ingestion sous licence) avant 9.3 (curation, dimensionnée au rendement réel de Wikibooks). Effort estimé : **3-5 journées**, coût dominant éditorial (story 9.3).
+
+### Story 9.1 : Socle données de recettes + attribution
+
+As a moteur / porteur du projet,
+I want une table de recettes seed avec les métadonnées d'attribution, lisible derrière `SourceDeRecettes`,
+So that le contrat légal et technique est posé avant qu'un seul octet de contenu tiers n'entre.
+
+**Acceptance Criteria:**
+
+**Given** l'interface `SourceDeRecettes` et le cache `RecetteCache` existants
+**When** je pose le socle de données
+**Then** une migration Prisma crée `RecetteSeed` (`source`, `sourceRef`, `sourceUrl?`, `titre`, `ingredientsTexte[]`, `preparation @db.Text`, `licence?`, `auteursUrl?`, `@@unique([source, sourceRef])` pour un seed idempotent)
+**And** `RecetteBrute` reste ce que `/core` consomme (titre + `ingredientsTexte`) ; préparation & attribution transitent par une couche présentation séparée (`RecettePresentation`, union discriminée wikibooks/curation)
+**And** une nouvelle implémentation `SourceDeRecettes` lit `RecetteSeed`, branchée derrière le cache
+**And** un `prisma db seed` idempotent (upsert) charge une recette de test de bout en bout
+**And** la fiche recette affiche un bloc attribution conditionnel (si `licence != null` : crédit + licence CC BY-SA 4.0 liée + lien historique des auteurs).
+
+### Story 9.2 : Pipeline d'ingestion Wikibooks
+
+As a porteur du projet,
+I want un script qui importe les recettes de Wikibooks Cookbook FR en artefact versionné,
+So that le pool est alimenté de façon traçable et rejouable, sans dépendance runtime à un site tiers.
+
+**Acceptance Criteria:**
+
+**Given** le socle `RecetteSeed` (9.1) et la licence CC-BY-SA à respecter
+**When** j'exécute le pipeline d'ingestion (hors runtime)
+**Then** il récupère les pages de la catégorie « Plat principal » (+ catégories complémentaires pour viser le volume) via l'API MediaWiki
+**And** il parse le wikitexte en `titre` / `ingredientsTexte` / `preparation` / `sourceUrl` / `auteursUrl` (URL `?action=history`), avec nettoyage des balises internes
+**And** il produit un artefact NDJSON **versionné dans Git** (input du seed), et charge `RecetteSeed` via le seed de 9.1
+**And** ~110 plats principaux (au minimum) sont ingérés et affichables préparation + attribution comprises
+**And** la revue d'attribution est possible en diff de PR (chaque republication de texte Wikibooks est visible dans l'artefact versionné).
+
+> **Note (revue) :** story à plus forte incertitude — hétérogénéité des pages wikitexte, qualité de parsing au cas par cas.
+
+### Story 9.3 : Complément curation maison & atteinte de la cible
+
+As a porteur du projet,
+I want compléter le pool avec des recettes maison rédigées,
+So that on atteint 200-300 recettes avec une expérience homogène quelle que soit l'origine.
+
+**Acceptance Criteria:**
+
+**Given** le rendement réel de Wikibooks connu (après 9.2)
+**When** je complète le pool
+**Then** les recettes manquantes pour atteindre 200-300 sont rédigées/curées avec `source="curation"`, **préparation rédigée incluse** (uniformité produit — pas d'expérience à deux vitesses)
+**And** le pool couvre une répartition suffisante par régime/allergène (cible ≥ 15-20 recettes par catégorie : vegan, sans gluten, sans lactose, sans les 14 allergènes majeurs), vérifiée par un test appelant le détecteur `/core`
+**And** l'aide-rédaction LLM hors-runtime, si validée par Philippe, peut accélérer — le contenu reste relu à la main
+**And** `recettesLocales.ts` (correctif temporaire) est retiré une fois le pool à la cible.
+
+> **Contrat de test du pool (Amelia)** : taille ≥ 200 ; unicité `sourceRef` & titre ; `ingredientsTexte` non vide ; `preparation` non vide + garde-fou anti-stub ; `origine` valide ; `sourceUrl` présent + domaine `wikibooks.org` **ssi** origine wikibooks, absent en curation ; bijection `sourceRef` entre couche source et couche présentation (pas d'orphelin) ; unicité des `sourceUrl`.
+
+> **Verrou juridique (avant déploiement de 9.2)** : faire valider par quelqu'un de qualifié en droit que (1) crédit + mention de licence + lien `sourceUrl` + lien historique des auteurs suffisent comme attribution CC-BY-SA 4.0 pour de la republication de texte intégral, et (2) les mentions légales / ToU de l'app portent bien l'obligation de partage à l'identique (SA) sur le contenu dérivé. La validation peut se faire **en parallèle** du dev de 9.2 (9.1 pose déjà les colonnes) — elle ne bloque que le déploiement public, pas le développement.
 
 ---
 

@@ -35,7 +35,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-06-19
-last_updated: 2026-06-28  # revue lot Epic 5 → done — MVP COMPLET (3 patches)
+last_updated: 2026-07-03  # bascule V1 : Epics 6/7/8/9 promus V1 (sauf 7.1) — cf. planning-artifacts/v1-scope.md
 project: CookWho
 project_key: NOKEY
 tracking_system: file-system
@@ -97,3 +97,37 @@ development_status:
   5-3-avertissement-allergie-validation: done
   5-4-etat-de-generation-en-cours: done
   epic-5-retrospective: optional
+
+  # Epic 6 : Identité de marque & site vitrine (V1)
+  epic-6: backlog
+  6-1-logo-cookwho: backlog
+  6-2-page-d-accueil-site-vitrine: backlog
+  6-3-bouton-de-connexion-page-d-accueil: backlog
+  6-4-gestion-de-compte-email-mot-de-passe: backlog  # V1 — prérequis : décision archi Auth.js
+
+  # Epic 7 : Améliorations gestion du repas & des participants (V1 — sauf 7.1)
+  epic-7: backlog
+  7-1-design-calendrier-horaire: backlog  # reste V2
+  7-2-participants-temps-reel: backlog
+  7-3-editer-un-participant: backlog
+  7-4-afficher-lien-invitation-complet: backlog
+  7-5-email-confirmation-creation-repas: backlog
+
+  # Epic 8 : Refonte du design global (V1 — périmètre réduit aux 5 écrans clés)
+  epic-8: backlog
+  8-1-audit-refonte-design-clean: backlog
+
+  # Epic 9 : Source de recettes durable (Wikibooks + curation) (V1)
+  epic-9: backlog
+  9-1-socle-donnees-recettes-attribution: backlog
+  9-2-pipeline-ingestion-wikibooks: backlog
+  9-3-curation-maison-atteinte-cible: backlog
+
+  # Epic 9 : Source de recettes durable (Wikibooks + curation) (V2 — backlog)
+  # Décision party mode (Winston/Amelia/John/Sally) : remplace le scraper Marmiton
+  # cassé par un pool statique 200-300 recettes (Wikibooks CC-BY-SA + curation).
+  # Ordre strict 9.1 → 9.2 → 9.3. Verrou juridique avant déploiement de 9.2.
+  epic-9: backlog
+  9-1-socle-donnees-recettes-attribution: backlog
+  9-2-pipeline-ingestion-wikibooks: backlog
+  9-3-complement-curation-maison-cible: backlog
