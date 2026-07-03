@@ -57,9 +57,26 @@ export const organisateurRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      // Profil de restrictions de l'organisateur (les mêmes pour TOUS ses repas)
+      // → on pré-remplit sa nouvelle entrée avec ce qu'il a déjà déclaré.
+      const profilOrga = await ctx.db.participant.findFirst({
+        where: {
+          estOrganisateur: true,
+          repas: { organisateurId: ctx.session.user.id },
+          restrictions: { some: {} },
+        },
+        orderBy: { createdAt: "desc" },
+        select: {
+          restrictions: {
+            select: { type: true, valeur: true, seuilTolerance: true },
+          },
+        },
+      });
+      const profil = profilOrga?.restrictions ?? [];
+
       // L'organisateur est aussi un convive : on crée son entrée « participant »
       // (estOrganisateur) en même temps, pour qu'il apparaisse dans la liste et
-      // puisse déclarer ses restrictions (elles comptent dans la génération).
+      // que ses restrictions comptent dans la génération.
       return ctx.db.repas.create({
         data: {
           lieu: input.lieu,
@@ -72,6 +89,10 @@ export const organisateurRouter = createTRPCRouter({
               prenom: ctx.session.user.name ?? "Moi",
               estOrganisateur: true,
               accessToken: genererAccessToken(),
+              statut: profil.length > 0 ? "REPONDU" : "EN_ATTENTE",
+              ...(profil.length > 0
+                ? { restrictions: { create: profil } }
+                : {}),
             },
           },
         },
@@ -172,50 +193,63 @@ export const organisateurRouter = createTRPCRouter({
   enregistrerMesRestrictions: protectedProcedure
     .input(z.object({ repasId: z.string(), restrictions: restrictionsInput }))
     .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+      const prenom = ctx.session.user.name ?? "Moi";
+
+      // Ownership (contexte de la requête).
       const repas = await ctx.db.repas.findFirst({
-        where: { id: input.repasId, organisateurId: ctx.session.user.id },
+        where: { id: input.repasId, organisateurId: userId },
         select: { id: true },
       });
       if (!repas) throw new TRPCError({ code: "NOT_FOUND" });
 
-      // Entrée organisateur du repas (créée à la volée pour un repas ancien).
-      const existant = await ctx.db.participant.findFirst({
-        where: { repasId: repas.id, estOrganisateur: true },
+      // Les restrictions de l'organisateur sont les MÊMES pour tous ses repas :
+      // on synchronise son entrée (créée si absente) sur chacun d'eux.
+      const repasList = await ctx.db.repas.findMany({
+        where: { organisateurId: userId },
         select: { id: true },
       });
-      const participantId =
-        existant?.id ??
-        (
-          await ctx.db.participant.create({
-            data: {
-              repasId: repas.id,
-              prenom: ctx.session.user.name ?? "Moi",
-              estOrganisateur: true,
-              accessToken: genererAccessToken(),
-            },
-            select: { id: true },
-          })
-        ).id;
+
+      const lignes = (participantId: string) =>
+        input.restrictions.map((r) => ({
+          participantId,
+          type: r.type,
+          valeur: r.valeur,
+          seuilTolerance:
+            r.type === "NON_AIME"
+              ? (r.seuilTolerance ?? SEUIL_TOLERANCE_DEFAUT)
+              : null,
+        }));
 
       await ctx.db.$transaction(async (tx) => {
-        await tx.restriction.deleteMany({ where: { participantId } });
-        if (input.restrictions.length > 0) {
-          await tx.restriction.createMany({
-            data: input.restrictions.map((r) => ({
-              participantId,
-              type: r.type,
-              valeur: r.valeur,
-              seuilTolerance:
-                r.type === "NON_AIME"
-                  ? (r.seuilTolerance ?? SEUIL_TOLERANCE_DEFAUT)
-                  : null,
-            })),
+        for (const { id: rid } of repasList) {
+          const existant = await tx.participant.findFirst({
+            where: { repasId: rid, estOrganisateur: true },
+            select: { id: true },
+          });
+          const pid =
+            existant?.id ??
+            (
+              await tx.participant.create({
+                data: {
+                  repasId: rid,
+                  prenom,
+                  estOrganisateur: true,
+                  accessToken: genererAccessToken(),
+                },
+                select: { id: true },
+              })
+            ).id;
+
+          await tx.restriction.deleteMany({ where: { participantId: pid } });
+          if (input.restrictions.length > 0) {
+            await tx.restriction.createMany({ data: lignes(pid) });
+          }
+          await tx.participant.update({
+            where: { id: pid },
+            data: { statut: "REPONDU" },
           });
         }
-        await tx.participant.update({
-          where: { id: participantId },
-          data: { statut: "REPONDU" },
-        });
       });
 
       return { ok: true as const };

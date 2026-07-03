@@ -31,7 +31,11 @@ function caller(session: Session, db: unknown) {
 describe("organisateurRouter", () => {
   it("creerRepas rattache le repas à la session et calcule expiresAt", async () => {
     const create = vi.fn().mockResolvedValue({ id: "r1" });
-    const db = { repas: { create, findMany: vi.fn() } };
+    // creerRepas lit d'abord le profil de restrictions de l'organisateur.
+    const db = {
+      repas: { create, findMany: vi.fn() },
+      participant: { findFirst: vi.fn().mockResolvedValue(null) },
+    };
 
     // Date dynamiquement future (évite un test « bombe à retardement »).
     const dateFuture = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
@@ -423,7 +427,7 @@ describe("organisateurRouter — retirerParticipant", () => {
   });
 });
 
-function dbMesRestrictions(repasExiste: boolean, orgaExiste: boolean) {
+function dbMesRestrictions(repasExiste: boolean, orgaExiste: boolean, nbRepas = 1) {
   const deleteMany = vi.fn().mockResolvedValue({ count: 0 });
   const createMany = vi.fn().mockResolvedValue({ count: 0 });
   const update = vi.fn().mockResolvedValue({});
@@ -432,11 +436,17 @@ function dbMesRestrictions(repasExiste: boolean, orgaExiste: boolean) {
     .fn()
     .mockResolvedValue(orgaExiste ? { id: "orga1" } : null);
   const repasFindFirst = vi.fn().mockResolvedValue(repasExiste ? { id: "r1" } : null);
-  const tx = { restriction: { deleteMany, createMany }, participant: { update } };
+  const repasFindMany = vi
+    .fn()
+    .mockResolvedValue(Array.from({ length: nbRepas }, (_, i) => ({ id: `r${i + 1}` })));
+  // Le transaction callback opère sur `tx` (participant + restriction).
+  const tx = {
+    restriction: { deleteMany, createMany },
+    participant: { findFirst: participantFindFirst, create: participantCreate, update },
+  };
   const $transaction = vi.fn((fn: (t: typeof tx) => Promise<unknown>) => fn(tx));
   const db = {
-    repas: { findFirst: repasFindFirst },
-    participant: { findFirst: participantFindFirst, create: participantCreate },
+    repas: { findFirst: repasFindFirst, findMany: repasFindMany },
     $transaction,
   };
   return { db, deleteMany, createMany, update, participantCreate, $transaction };
@@ -484,5 +494,17 @@ describe("organisateurRouter — enregistrerMesRestrictions", () => {
         data: expect.objectContaining({ estOrganisateur: true, prenom: "Moi" }),
       }),
     );
+  });
+
+  it("propage les restrictions à TOUS les repas de l'organisateur", async () => {
+    // 3 repas de l'organisateur, chacun avec une entrée organisateur existante.
+    const m = dbMesRestrictions(true, true, 3);
+    await caller({ user: { id: "o1" } }, m.db).organisateur.enregistrerMesRestrictions({
+      repasId: "r1",
+      restrictions: [{ type: "ALLERGIE", valeur: "Arachides" }],
+    });
+    // Une écriture (delete + update REPONDU) par repas.
+    expect(m.deleteMany).toHaveBeenCalledTimes(3);
+    expect(m.update).toHaveBeenCalledTimes(3);
   });
 });
